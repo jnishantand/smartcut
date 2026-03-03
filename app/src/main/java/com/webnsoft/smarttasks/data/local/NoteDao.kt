@@ -1,11 +1,12 @@
 package com.webnsoft.smarttasks.data.local
-
 import androidx.room.*
 import com.webnsoft.smarttasks.data.model.Note
 import kotlinx.coroutines.flow.Flow
 
+
 @Dao
 interface NoteDao {
+
     @Query("SELECT * FROM notes")
     fun getNotes(): Flow<List<Note>>
 
