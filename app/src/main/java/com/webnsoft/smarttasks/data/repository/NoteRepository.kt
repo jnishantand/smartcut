@@ -1,8 +1,8 @@
 package com.webnsoft.smarttasks.data.repository
 
+import com.webnsoft.smarttasks.data.Api.NoteApi
 import com.webnsoft.smarttasks.data.local.NoteDao
 import com.webnsoft.smarttasks.data.model.Note
-import com.webnsoft.smarttasks.data.remote.NoteApi
 import kotlinx.coroutines.flow.Flow
 import javax.inject.Inject
 import javax.inject.Singleton
