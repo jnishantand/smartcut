@@ -1,10 +1,65 @@
 import 'package:flutter/material.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import '../../theme/app_colors.dart';
-import '../customer/customer_main_screen.dart'; // temporary navigation
-import '../admin/admin_main_screen.dart';
+import 'otp_screen.dart';
 
-class LoginScreen extends StatelessWidget {
+class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
+
+  @override
+  State<LoginScreen> createState() => _LoginScreenState();
+}
+
+class _LoginScreenState extends State<LoginScreen> {
+  final _phoneController = TextEditingController();
+  bool _isLoading = false;
+
+  Future<void> _verifyPhone() async {
+    final phone = _phoneController.text.trim();
+    if (phone.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Please enter your phone number')),
+      );
+      return;
+    }
+
+    setState(() => _isLoading = true);
+
+    try {
+      await FirebaseAuth.instance.verifyPhoneNumber(
+        phoneNumber: phone,
+        verificationCompleted: (PhoneAuthCredential credential) async {
+          // Auto-resolution (usually Android only)
+          // We can handle auto-sign in here if needed, but usually we just let the user 
+          // type it in on the next screen anyway to keep the flow consistent, or we can sign in directly.
+        },
+        verificationFailed: (FirebaseAuthException e) {
+          setState(() => _isLoading = false);
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Verification Failed: ${e.message}')),
+          );
+        },
+        codeSent: (String verificationId, int? resendToken) {
+          setState(() => _isLoading = false);
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (_) => OtpScreen(
+                verificationId: verificationId,
+                phoneNumber: phone,
+              ),
+            ),
+          );
+        },
+        codeAutoRetrievalTimeout: (String verificationId) {},
+      );
+    } catch (e) {
+      setState(() => _isLoading = false);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('An error occurred: $e')),
+      );
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -29,8 +84,9 @@ class LoginScreen extends StatelessWidget {
               ),
               const SizedBox(height: 48),
               
-              const TextField(
-                decoration: InputDecoration(
+              TextField(
+                controller: _phoneController,
+                decoration: const InputDecoration(
                   labelText: 'Phone Number',
                   prefixIcon: Icon(Icons.phone),
                   hintText: '+1 234 567 8900',
@@ -40,47 +96,14 @@ class LoginScreen extends StatelessWidget {
               const SizedBox(height: 24),
               
               ElevatedButton(
-                onPressed: () {
-                  // Navigate to home (simulated auth)
-                  Navigator.pushReplacement(
-                    context, 
-                    MaterialPageRoute(builder: (_) => const CustomerMainScreen())
-                  );
-                },
+                onPressed: _isLoading ? null : _verifyPhone,
                 style: ElevatedButton.styleFrom(
                   minimumSize: const Size(double.infinity, 56),
                 ),
-                child: const Text('Send OTP'),
+                child: _isLoading 
+                  ? const CircularProgressIndicator(color: Colors.white)
+                  : const Text('Send OTP'),
               ),
-              
-              const SizedBox(height: 32),
-              
-              OutlinedButton(
-                onPressed: () {
-                  // Navigate to admin
-                  Navigator.pushReplacement(
-                    context, 
-                    MaterialPageRoute(builder: (_) => const AdminMainScreen())
-                  );
-                },
-                style: OutlinedButton.styleFrom(
-                  minimumSize: const Size(double.infinity, 56),
-                ),
-                child: const Text('Login as Admin'),
-              ),
-              
-              const SizedBox(height: 24),
-              
-              Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  const Text('Don\'t have an account?', style: TextStyle(color: AppColors.textSecondary)),
-                  TextButton(
-                    onPressed: () {},
-                    child: const Text('Sign Up', style: TextStyle(fontWeight: FontWeight.bold)),
-                  )
-                ],
-              )
             ],
           ),
         ),
