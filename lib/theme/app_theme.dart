@@ -17,32 +17,33 @@ class AppTheme {
         onSurface: AppColors.textPrimary,
         onError: Colors.white,
       ),
-      textTheme: GoogleFonts.interTextTheme().copyWith(
-        displayLarge: GoogleFonts.inter(
+      fontFamily: GoogleFonts.inter().fontFamily,
+      textTheme: const TextTheme(
+        displayLarge: TextStyle(
             color: AppColors.textPrimary,
             fontSize: 32,
             fontWeight: FontWeight.bold),
-        displayMedium: GoogleFonts.inter(
+        displayMedium: TextStyle(
             color: AppColors.textPrimary,
             fontSize: 28,
             fontWeight: FontWeight.bold),
-        titleLarge: GoogleFonts.inter(
+        titleLarge: TextStyle(
             color: AppColors.textPrimary,
             fontSize: 22,
             fontWeight: FontWeight.w600),
-        titleMedium: GoogleFonts.inter(
+        titleMedium: TextStyle(
             color: AppColors.textPrimary,
             fontSize: 18,
             fontWeight: FontWeight.w600),
-        bodyLarge: GoogleFonts.inter(
+        bodyLarge: TextStyle(
             color: AppColors.textPrimary,
             fontSize: 16,
             fontWeight: FontWeight.normal),
-        bodyMedium: GoogleFonts.inter(
+        bodyMedium: TextStyle(
             color: AppColors.textSecondary,
             fontSize: 14,
             fontWeight: FontWeight.normal),
-        labelLarge: GoogleFonts.inter(
+        labelLarge: TextStyle(
             color: Colors.white, fontSize: 16, fontWeight: FontWeight.w600),
       ),
       elevatedButtonTheme: ElevatedButtonThemeData(
@@ -70,7 +71,7 @@ class AppTheme {
               fontSize: 16, fontWeight: FontWeight.w600, letterSpacing: 0.5),
         ),
       ),
-      cardTheme: CardTheme(
+      cardTheme: CardThemeData(
         color: AppColors.surface,
         elevation: 0,
         shape: RoundedRectangleBorder(
