@@ -1,0 +1,30 @@
+{
+  "project_info": {
+    "project_number": "585760071145",
+    "firebase_url": "https://smartcut-15624-default-rtdb.asia-southeast1.firebasedatabase.app",
+    "project_id": "smartcut-15624",
+    "storage_bucket": "smartcut-15624.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:585760071145:android:67e852f1dbb0d1df333f78",
+        "android_client_info": {
+          "package_name": "com.example.smartcut"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDZQXWJrj71DbUuvHmhyghAjpAd-6yzsbE"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
