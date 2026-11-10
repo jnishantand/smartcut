@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../theme/app_colors.dart';
-import '../customer/home/customer_home_screen.dart'; // temporary navigation
+import '../customer/customer_main_screen.dart'; // temporary navigation
+import '../admin/admin_main_screen.dart';
 
 class LoginScreen extends StatelessWidget {
   const LoginScreen({super.key});
@@ -43,7 +44,7 @@ class LoginScreen extends StatelessWidget {
                   // Navigate to home (simulated auth)
                   Navigator.pushReplacement(
                     context, 
-                    MaterialPageRoute(builder: (_) => const CustomerHomeScreen())
+                    MaterialPageRoute(builder: (_) => const CustomerMainScreen())
                   );
                 },
                 style: ElevatedButton.styleFrom(
@@ -53,6 +54,22 @@ class LoginScreen extends StatelessWidget {
               ),
               
               const SizedBox(height: 32),
+              
+              OutlinedButton(
+                onPressed: () {
+                  // Navigate to admin
+                  Navigator.pushReplacement(
+                    context, 
+                    MaterialPageRoute(builder: (_) => const AdminMainScreen())
+                  );
+                },
+                style: OutlinedButton.styleFrom(
+                  minimumSize: const Size(double.infinity, 56),
+                ),
+                child: const Text('Login as Admin'),
+              ),
+              
+              const SizedBox(height: 24),
               
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
