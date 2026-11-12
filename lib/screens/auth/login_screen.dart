@@ -126,7 +126,7 @@ class _LoginScreenState extends State<LoginScreen> {
                         // Bypass directly to Customer
                         Navigator.pushReplacement(
                           context, 
-                          MaterialPageRoute(builder: (_) => const CustomerMainScreen())
+                          MaterialPageRoute(builder: (_) => CustomerMainScreen())
                         );
                       },
                       child: const Text('Bypass to Customer', style: TextStyle(fontSize: 12)),
@@ -139,7 +139,7 @@ class _LoginScreenState extends State<LoginScreen> {
                         // Bypass directly to Admin
                         Navigator.pushReplacement(
                           context, 
-                          MaterialPageRoute(builder: (_) => const AdminMainScreen())
+                          MaterialPageRoute(builder: (_) => AdminMainScreen())
                         );
                       },
                       child: const Text('Bypass to Admin', style: TextStyle(fontSize: 12)),
