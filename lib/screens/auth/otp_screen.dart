@@ -4,6 +4,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import '../../theme/app_colors.dart';
 import '../customer/customer_main_screen.dart';
 import '../admin/admin_main_screen.dart';
+import 'signup_screen.dart';
 
 class OtpScreen extends StatefulWidget {
   final String verificationId;
@@ -74,28 +75,18 @@ class _OtpScreenState extends State<OtpScreen> {
           .get();
 
       if (!userDoc.exists) {
-        // Create new customer profile
-        await FirebaseFirestore.instance.collection('users').doc(user.uid).set({
-          'phoneNumber': widget.phoneNumber,
-          'role': 'customer',
-          'createdAt': FieldValue.serverTimestamp(),
-          'notificationSettings': {
-            'bookingUpdates': true,
-            'appointmentReminders': true,
-            'salonAnnouncements': true,
-            'promotions': false,
-          }
-        });
-        
+        // Navigate to SignUp screen to collect Name and Email instead of directly creating the document here
         if (mounted) {
           Navigator.pushAndRemoveUntil(
             context,
-            MaterialPageRoute(builder: (_) => const CustomerMainScreen()),
+            MaterialPageRoute(
+              builder: (_) => SignUpScreen(phoneNumber: widget.phoneNumber),
+            ),
             (route) => false,
           );
         }
       } else {
-        // Existing user, check role
+        // Existing user, check role and navigate
         final data = userDoc.data() as Map<String, dynamic>?;
         final role = data?['role'] ?? 'customer';
         
