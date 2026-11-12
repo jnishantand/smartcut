@@ -129,10 +129,10 @@ class _LoginScreenState extends State<LoginScreen> {
                           MaterialPageRoute(builder: (_) => const CustomerMainScreen())
                         );
                       },
-                      child: const Text('Bypass to Customer'),
+                      child: const Text('Bypass to Customer', style: TextStyle(fontSize: 12)),
                     ),
                   ),
-                  const SizedBox(width: 16),
+                  const SizedBox(width: 8),
                   Expanded(
                     child: OutlinedButton(
                       onPressed: () {
@@ -142,7 +142,7 @@ class _LoginScreenState extends State<LoginScreen> {
                           MaterialPageRoute(builder: (_) => const AdminMainScreen())
                         );
                       },
-                      child: const Text('Bypass to Admin'),
+                      child: const Text('Bypass to Admin', style: TextStyle(fontSize: 12)),
                     ),
                   ),
                 ],
