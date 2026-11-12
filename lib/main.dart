@@ -26,6 +26,13 @@ class MyApp extends StatelessWidget {
       theme: AppTheme.lightTheme,
       home: const LoginScreen(),
       debugShowCheckedModeBanner: false,
+      onUnknownRoute: (settings) {
+        // This catches the Firebase Auth callback deep links and prevents 
+        // the app from throwing a routing exception.
+        return MaterialPageRoute(
+          builder: (context) => const LoginScreen(),
+        );
+      },
     );
   }
 }
