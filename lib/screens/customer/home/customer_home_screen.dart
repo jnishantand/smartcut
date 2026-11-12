@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import '../../../theme/app_colors.dart';
 import '../../../widgets/status_badge.dart';
 import '../../../widgets/service_card.dart';
+import '../../../providers/user_provider.dart';
 
 class CustomerHomeScreen extends StatelessWidget {
   const CustomerHomeScreen({super.key});
@@ -27,34 +29,45 @@ class CustomerHomeScreen extends StatelessWidget {
   }
 
   Widget _buildHeader(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.all(24.0),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
+    return Consumer<UserProvider>(
+      builder: (context, userProvider, child) {
+        final profile = userProvider.userProfile;
+        final isLoading = userProvider.isLoading;
+        final name = profile?.name ?? 'Customer';
+
+        return Padding(
+          padding: const EdgeInsets.all(24.0),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text(
-                'Good Morning, Alex',
-                style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                  color: AppColors.textSecondary,
-                ),
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    isLoading ? 'Loading...' : 'Hello, $name',
+                    style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                      color: AppColors.textSecondary,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    'Smart Salon & Spa',
+                    style: Theme.of(context).textTheme.displayMedium,
+                  ),
+                ],
               ),
-              const SizedBox(height: 4),
-              Text(
-                'Smart Salon & Spa',
-                style: Theme.of(context).textTheme.displayMedium,
+              CircleAvatar(
+                radius: 24,
+                backgroundColor: AppColors.secondary,
+                child: Text(
+                  isLoading || name.isEmpty ? '?' : name[0].toUpperCase(), 
+                  style: const TextStyle(color: AppColors.primary, fontWeight: FontWeight.bold, fontSize: 20)
+                ),
               ),
             ],
           ),
-          const CircleAvatar(
-            radius: 24,
-            backgroundColor: AppColors.secondary,
-            child: Icon(Icons.person, color: AppColors.primary),
-          ),
-        ],
-      ),
+        );
+      },
     );
   }
 
