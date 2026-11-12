@@ -104,6 +104,49 @@ class _LoginScreenState extends State<LoginScreen> {
                   ? const CircularProgressIndicator(color: Colors.white)
                   : const Text('Send OTP'),
               ),
+              const SizedBox(height: 32),
+              
+              const Row(
+                children: [
+                  Expanded(child: Divider()),
+                  Padding(
+                    padding: EdgeInsets.symmetric(horizontal: 16.0),
+                    child: Text('DEVELOPER QUICK ACCESS', style: TextStyle(color: AppColors.textSecondary, fontSize: 10)),
+                  ),
+                  Expanded(child: Divider()),
+                ],
+              ),
+              const SizedBox(height: 16),
+              
+              Row(
+                children: [
+                  Expanded(
+                    child: OutlinedButton(
+                      onPressed: () {
+                        // Bypass directly to Customer
+                        Navigator.pushReplacement(
+                          context, 
+                          MaterialPageRoute(builder: (_) => const CustomerMainScreen())
+                        );
+                      },
+                      child: const Text('Bypass to Customer'),
+                    ),
+                  ),
+                  const SizedBox(width: 16),
+                  Expanded(
+                    child: OutlinedButton(
+                      onPressed: () {
+                        // Bypass directly to Admin
+                        Navigator.pushReplacement(
+                          context, 
+                          MaterialPageRoute(builder: (_) => const AdminMainScreen())
+                        );
+                      },
+                      child: const Text('Bypass to Admin'),
+                    ),
+                  ),
+                ],
+              ),
             ],
           ),
         ),
