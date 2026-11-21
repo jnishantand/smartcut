@@ -1,9 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import '../../../theme/app_colors.dart';
 import '../../../widgets/status_badge.dart';
 import '../../../widgets/service_card.dart';
 import '../../../providers/user_provider.dart';
+import '../../../services/firestore_service.dart';
+import '../../../models/salon_service.dart';
 
 class CustomerHomeScreen extends StatelessWidget {
   const CustomerHomeScreen({super.key});
@@ -88,51 +91,68 @@ class CustomerHomeScreen extends StatelessWidget {
             ),
           ],
         ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        child: StreamBuilder<DocumentSnapshot>(
+          stream: FirestoreService().getSalonStatus(),
+          builder: (context, snapshot) {
+            int currentCustomers = 0;
+            if (snapshot.hasData && snapshot.data!.exists) {
+              final data = snapshot.data!.data() as Map<String, dynamic>;
+              currentCustomers = data['currentCustomers'] ?? 0;
+            }
+
+            final status = currentCustomers > 5 
+                ? SalonStatus.busy 
+                : SalonStatus.available;
+            
+            final waitTime = currentCustomers > 5 ? '${(currentCustomers * 15)} min' : 'No Wait';
+
+            return Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
-                  'Current Availability',
-                  style: Theme.of(context).textTheme.titleMedium,
-                ),
-                const StatusBadge(status: SalonStatus.busy),
-              ],
-            ),
-            const SizedBox(height: 16),
-            Row(
-              children: [
-                _buildStatusStat(context, 'In Salon', '5', Icons.people_outline),
-                const SizedBox(width: 24),
-                _buildStatusStat(context, 'Est. Wait', '30 min', Icons.timer_outlined),
-              ],
-            ),
-            const SizedBox(height: 16),
-            Container(
-              padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(
-                color: AppColors.secondary.withOpacity(0.5),
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: Row(
-                children: [
-                  const Icon(Icons.info_outline, size: 16, color: AppColors.primary),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    child: Text(
-                      'Waiting times are estimates and may vary.',
-                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                        color: AppColors.primary,
-                        fontSize: 12,
-                      ),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(
+                      'Current Availability',
+                      style: Theme.of(context).textTheme.titleMedium,
                     ),
+                    StatusBadge(status: status),
+                  ],
+                ),
+                const SizedBox(height: 16),
+                Row(
+                  children: [
+                    _buildStatusStat(context, 'In Salon', '$currentCustomers', Icons.people_outline),
+                    const SizedBox(width: 24),
+                    _buildStatusStat(context, 'Est. Wait', waitTime, Icons.timer_outlined),
+                  ],
+                ),
+                const SizedBox(height: 16),
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: AppColors.secondary.withOpacity(0.5),
+                    borderRadius: BorderRadius.circular(12),
                   ),
-                ],
-              ),
-            ),
-          ],
+                  child: Row(
+                    children: [
+                      const Icon(Icons.info_outline, size: 16, color: AppColors.primary),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Text(
+                          'Waiting times are estimates and may vary.',
+                          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                            color: AppColors.primary,
+                            fontSize: 12,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            );
+          }
         ),
       ),
     );
@@ -194,29 +214,50 @@ class CustomerHomeScreen extends StatelessWidget {
         const SizedBox(height: 8),
         SizedBox(
           height: 200,
-          child: ListView(
-            padding: const EdgeInsets.symmetric(horizontal: 24.0),
-            scrollDirection: Axis.horizontal,
-            children: [
-              ServiceCard(
-                title: 'Classic Haircut',
-                duration: '45 mins',
-                price: '35',
-                onTap: () {},
-              ),
-              ServiceCard(
-                title: 'Beard Trim',
-                duration: '30 mins',
-                price: '20',
-                onTap: () {},
-              ),
-              ServiceCard(
-                title: 'Full Grooming',
-                duration: '1 hr 15 mins',
-                price: '60',
-                onTap: () {},
-              ),
-            ],
+          child: StreamBuilder<List<SalonService>>(
+            stream: FirestoreService().getActiveServices(),
+            builder: (context, snapshot) {
+              if (snapshot.connectionState == ConnectionState.waiting) {
+                return const Center(child: CircularProgressIndicator());
+              }
+              if (!snapshot.hasData || snapshot.data!.isEmpty) {
+                // Show some fallback UI if the database is empty right now
+                return ListView(
+                  padding: const EdgeInsets.symmetric(horizontal: 24.0),
+                  scrollDirection: Axis.horizontal,
+                  children: [
+                    ServiceCard(
+                      title: 'Classic Haircut',
+                      duration: '45 mins',
+                      price: '35',
+                      onTap: () {},
+                    ),
+                    ServiceCard(
+                      title: 'Beard Trim',
+                      duration: '30 mins',
+                      price: '20',
+                      onTap: () {},
+                    ),
+                  ],
+                );
+              }
+
+              final services = snapshot.data!;
+              return ListView.builder(
+                padding: const EdgeInsets.symmetric(horizontal: 24.0),
+                scrollDirection: Axis.horizontal,
+                itemCount: services.length,
+                itemBuilder: (context, index) {
+                  final service = services[index];
+                  return ServiceCard(
+                    title: service.name,
+                    duration: '${service.durationMinutes} mins',
+                    price: service.price.toStringAsFixed(0),
+                    onTap: () {},
+                  );
+                },
+              );
+            }
           ),
         ),
       ],
