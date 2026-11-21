@@ -48,8 +48,8 @@ class NotificationService {
     );
 
     await _localNotificationsPlugin.initialize(
-      initializationSettings,
-      onDidReceiveNotificationResponse: _onSelectNotification,
+
+      onDidReceiveNotificationResponse: _onSelectNotification, settings: InitializationSettings(),
     );
 
     // 3. Set Background Message Handler
@@ -113,10 +113,10 @@ class NotificationService {
     );
 
     await _localNotificationsPlugin.show(
-      message.notification.hashCode,
-      message.notification?.title,
-      message.notification?.body,
-      platformChannelSpecifics,
+      id: message.hashCode,
+
+
+      notificationDetails: platformChannelSpecifics,
       payload: message.data.toString(),
     );
   }
