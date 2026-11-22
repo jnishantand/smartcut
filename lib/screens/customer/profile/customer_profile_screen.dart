@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import '../../../theme/app_colors.dart';
 import '../../notifications/notification_preferences_screen.dart';
 import '../../auth/login_screen.dart';
@@ -96,12 +97,15 @@ class CustomerProfileScreen extends StatelessWidget {
           title: 'Logout',
           textColor: AppColors.error,
           iconColor: AppColors.error,
-          onTap: () {
-            Navigator.pushAndRemoveUntil(
-              context, 
-              MaterialPageRoute(builder: (_) => const LoginScreen()),
-              (route) => false,
-            );
+          onTap: () async {
+            await FirebaseAuth.instance.signOut(); // End the Firebase session
+            if (context.mounted) {
+              Navigator.pushAndRemoveUntil(
+                context, 
+                MaterialPageRoute(builder: (_) => const LoginScreen()),
+                (route) => false,
+              );
+            }
           },
         ),
       ],

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import '../../../theme/app_colors.dart';
 import '../../auth/login_screen.dart';
 import '../admin_notification_management_screen.dart';
@@ -28,12 +29,15 @@ class AdminSettingsScreen extends StatelessWidget {
           }),
           
           const SizedBox(height: 32),
-          _buildSettingsTile(context, Icons.logout, 'Logout', () {
-            Navigator.pushAndRemoveUntil(
-              context, 
-              MaterialPageRoute(builder: (_) => const LoginScreen()),
-              (route) => false,
-            );
+          _buildSettingsTile(context, Icons.logout, 'Logout', () async {
+            await FirebaseAuth.instance.signOut(); // End the Firebase session
+            if (context.mounted) {
+              Navigator.pushAndRemoveUntil(
+                context, 
+                MaterialPageRoute(builder: (_) => const LoginScreen()),
+                (route) => false,
+              );
+            }
           }, isDestructive: true),
         ],
       ),
