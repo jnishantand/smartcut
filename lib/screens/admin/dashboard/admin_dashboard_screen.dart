@@ -3,6 +3,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import '../../../theme/app_colors.dart';
 import '../../../widgets/status_badge.dart';
 import '../../../services/firestore_service.dart';
+import '../../../models/booking.dart';
 
 class AdminDashboardScreen extends StatefulWidget {
   const AdminDashboardScreen({super.key});
@@ -271,8 +272,35 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
             ],
           ),
           const SizedBox(height: 8),
-          _buildAppointmentTile(context, 'Alex Johnson', 'Classic Haircut', '3:00 PM', 'Available'),
-          _buildAppointmentTile(context, 'Sarah Smith', 'Hair Coloring', '3:45 PM', 'Checked-in'),
+          StreamBuilder<List<Booking>>(
+            stream: FirestoreService().getAdminBookings('confirmed'),
+            builder: (context, snapshot) {
+              if (snapshot.connectionState == ConnectionState.waiting) {
+                return const Center(child: CircularProgressIndicator());
+              }
+              
+              var bookings = snapshot.data ?? [];
+              
+              if (bookings.isEmpty) {
+                return const Text('No upcoming appointments.', style: TextStyle(color: AppColors.textSecondary));
+              }
+
+              // Show only the next 3 appointments for the dashboard
+              if (bookings.length > 3) {
+                bookings = bookings.sublist(0, 3);
+              }
+
+              return Column(
+                children: bookings.map((b) => _buildAppointmentTile(
+                  context, 
+                  b.customerName, 
+                  b.serviceName, 
+                  b.timeSlot, 
+                  'Confirmed'
+                )).toList(),
+              );
+            }
+          ),
           const SizedBox(height: 24),
         ],
       ),
