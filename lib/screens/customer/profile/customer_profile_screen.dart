@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:provider/provider.dart';
 import '../../../theme/app_colors.dart';
+import '../../../providers/user_provider.dart';
 import '../../notifications/notification_preferences_screen.dart';
 import '../../auth/login_screen.dart';
 
@@ -26,29 +28,48 @@ class CustomerProfileScreen extends StatelessWidget {
   }
 
   Widget _buildProfileHeader(BuildContext context) {
-    return Column(
-      children: [
-        const CircleAvatar(
-          radius: 50,
-          backgroundColor: AppColors.secondary,
-          child: Icon(Icons.person, size: 50, color: AppColors.primary),
-        ),
-        const SizedBox(height: 16),
-        Text(
-          'Alex Johnson',
-          style: Theme.of(context).textTheme.displayMedium?.copyWith(fontSize: 24),
-        ),
-        const SizedBox(height: 4),
-        Text(
-          '+1 234 567 8900',
-          style: Theme.of(context).textTheme.bodyLarge?.copyWith(color: AppColors.textSecondary),
-        ),
-        const SizedBox(height: 16),
-        OutlinedButton(
-          onPressed: () {},
-          child: const Text('Edit Profile'),
-        ),
-      ],
+    return Consumer<UserProvider>(
+      builder: (context, userProvider, child) {
+        final profile = userProvider.userProfile;
+        final name = profile?.name ?? 'Loading...';
+        final phone = profile?.phoneNumber ?? '';
+        final email = profile?.email ?? '';
+
+        return Column(
+          children: [
+            CircleAvatar(
+              radius: 50,
+              backgroundColor: AppColors.secondary,
+              child: Text(
+                name.isNotEmpty && name != 'Loading...' ? name[0].toUpperCase() : '?',
+                style: const TextStyle(fontSize: 40, color: AppColors.primary, fontWeight: FontWeight.bold),
+              ),
+            ),
+            const SizedBox(height: 16),
+            Text(
+              name,
+              style: Theme.of(context).textTheme.displayMedium?.copyWith(fontSize: 24),
+            ),
+            const SizedBox(height: 4),
+            Text(
+              phone,
+              style: Theme.of(context).textTheme.bodyLarge?.copyWith(color: AppColors.textSecondary),
+            ),
+            if (email.isNotEmpty) ...[
+              const SizedBox(height: 4),
+              Text(
+                email,
+                style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: AppColors.textSecondary),
+              ),
+            ],
+            const SizedBox(height: 16),
+            OutlinedButton(
+              onPressed: () {},
+              child: const Text('Edit Profile'),
+            ),
+          ],
+        );
+      }
     );
   }
 
