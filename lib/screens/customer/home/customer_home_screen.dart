@@ -8,10 +8,9 @@ import '../../../providers/user_provider.dart';
 import '../../../services/firestore_service.dart';
 import '../../../models/salon_service.dart';
 import '../../../models/booking.dart';
-import '../../../widgets/service_card.dart';
-import '../../../providers/user_provider.dart';
-import '../../../services/firestore_service.dart';
-import '../../../models/salon_service.dart';
+import '../../../providers/booking_provider.dart';
+import '../booking/service_selection_screen.dart';
+import '../booking/staff_selection_screen.dart';
 
 class CustomerHomeScreen extends StatelessWidget {
   const CustomerHomeScreen({super.key});
@@ -203,7 +202,12 @@ class CustomerHomeScreen extends StatelessWidget {
     return Padding(
       padding: const EdgeInsets.all(24.0),
       child: ElevatedButton(
-        onPressed: () {},
+        onPressed: () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(builder: (_) => const ServiceSelectionScreen()),
+          );
+        },
         style: ElevatedButton.styleFrom(
           minimumSize: const Size(double.infinity, 56),
         ),
@@ -223,7 +227,12 @@ class CustomerHomeScreen extends StatelessWidget {
             children: [
               Text('Popular Services', style: Theme.of(context).textTheme.titleLarge),
               TextButton(
-                onPressed: () {},
+                onPressed: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (_) => const ServiceSelectionScreen()),
+                  );
+                },
                 child: const Text('See All'),
               ),
             ],
@@ -239,24 +248,12 @@ class CustomerHomeScreen extends StatelessWidget {
                 return const Center(child: CircularProgressIndicator());
               }
               if (!snapshot.hasData || snapshot.data!.isEmpty) {
-                // Show some fallback UI if the database is empty right now
-                return ListView(
-                  padding: const EdgeInsets.symmetric(horizontal: 24.0),
-                  scrollDirection: Axis.horizontal,
-                  children: [
-                    ServiceCard(
-                      title: 'Classic Haircut',
-                      duration: '45 mins',
-                      price: '35',
-                      onTap: () {},
-                    ),
-                    ServiceCard(
-                      title: 'Beard Trim',
-                      duration: '30 mins',
-                      price: '20',
-                      onTap: () {},
-                    ),
-                  ],
+                return Center(
+                  child: TextButton.icon(
+                    onPressed: () => FirestoreService().seedSampleServices(),
+                    icon: const Icon(Icons.add_circle_outline),
+                    label: const Text('Add Services to Database'),
+                  ),
                 );
               }
 
@@ -271,7 +268,13 @@ class CustomerHomeScreen extends StatelessWidget {
                     title: service.name,
                     duration: '${service.durationMinutes} mins',
                     price: service.price.toStringAsFixed(0),
-                    onTap: () {},
+                    onTap: () {
+                      context.read<BookingProvider>().selectService(service);
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(builder: (_) => const StaffSelectionScreen()),
+                      );
+                    },
                   );
                 },
               );

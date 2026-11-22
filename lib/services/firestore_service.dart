@@ -16,6 +16,52 @@ class FirestoreService {
             .toList());
   }
 
+  Future<void> seedSampleServices() async {
+    final batch = _db.batch();
+    
+    final s1 = _db.collection('services').doc('classic_haircut');
+    batch.set(s1, {
+      'name': 'Classic Haircut',
+      'category': 'Haircuts',
+      'durationMinutes': 45,
+      'price': 250.0,
+      'advanceRequired': 50.0,
+      'isActive': true,
+    });
+
+    final s2 = _db.collection('services').doc('skin_fade');
+    batch.set(s2, {
+      'name': 'Skin Fade Haircut',
+      'category': 'Haircuts',
+      'durationMinutes': 60,
+      'price': 350.0,
+      'advanceRequired': 100.0,
+      'isActive': true,
+    });
+
+    final s3 = _db.collection('services').doc('beard_trim');
+    batch.set(s3, {
+      'name': 'Beard Trim & Styling',
+      'category': 'Beard & Grooming',
+      'durationMinutes': 30,
+      'price': 150.0,
+      'advanceRequired': 50.0,
+      'isActive': true,
+    });
+
+    final s4 = _db.collection('services').doc('full_grooming');
+    batch.set(s4, {
+      'name': 'Full Royal Grooming',
+      'category': 'Beard & Grooming',
+      'durationMinutes': 75,
+      'price': 600.0,
+      'advanceRequired': 150.0,
+      'isActive': true,
+    });
+
+    await batch.commit();
+  }
+
   // --- Bookings ---
   Future<void> createBooking(Booking booking) async {
     await _db.collection('bookings').add(booking.toMap());

@@ -17,7 +17,6 @@ class PaymentScreen extends StatefulWidget {
 }
 
 class _PaymentScreenState extends State<PaymentScreen> {
-  int _selectedMethod = 0;
   bool _isProcessing = false;
   late Razorpay _razorpay;
 
@@ -69,73 +68,39 @@ class _PaymentScreenState extends State<PaymentScreen> {
                     children: [
                       const Text('Amount to Pay', style: TextStyle(color: Colors.white70, fontSize: 16)),
                       const SizedBox(height: 8),
-                      Text('\$${service.advanceRequired.toStringAsFixed(2)}', style: const TextStyle(color: Colors.white, fontSize: 40, fontWeight: FontWeight.bold)),
+                      Text('₹${service.advanceRequired.toStringAsFixed(2)}', style: const TextStyle(color: Colors.white, fontSize: 40, fontWeight: FontWeight.bold)),
                     ],
                   ),
                 ),
                 
-                const SizedBox(height: 32),
-                Text('Payment Method', style: Theme.of(context).textTheme.titleLarge),
-                const SizedBox(height: 16),
-                
-                _buildPaymentMethod(0, Icons.credit_card, 'Credit / Debit Card', '**** **** **** 4242'),
-                const SizedBox(height: 12),
-                _buildPaymentMethod(1, Icons.apple, 'Apple Pay', ''),
-                const SizedBox(height: 12),
-                _buildPaymentMethod(2, Icons.account_balance_wallet, 'Add New Card', ''),
+                const SizedBox(height: 48),
+                Center(
+                  child: Column(
+                    children: [
+                      const Icon(Icons.verified_user_outlined, size: 48, color: AppColors.primary),
+                      const SizedBox(height: 16),
+                      Text(
+                        'Secure Checkout with Razorpay',
+                        style: Theme.of(context).textTheme.titleLarge,
+                      ),
+                      const SizedBox(height: 8),
+                      const Text(
+                        'Supports UPI, Cards, Netbanking & Wallets',
+                        style: TextStyle(color: AppColors.textSecondary),
+                      ),
+                    ],
+                  ),
+                ),
               ],
             ),
           ),
-          _buildBottomBar(),
+          _buildBottomBar(service.advanceRequired),
         ],
       ),
     );
   }
 
-  Widget _buildPaymentMethod(int index, IconData icon, String title, String subtitle) {
-    final isSelected = _selectedMethod == index;
-    
-    return GestureDetector(
-      onTap: () => setState(() => _selectedMethod = index),
-      child: Container(
-        padding: const EdgeInsets.all(16),
-        decoration: BoxDecoration(
-          color: AppColors.surface,
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: isSelected ? AppColors.primary : AppColors.border, width: isSelected ? 2 : 1),
-        ),
-        child: Row(
-          children: [
-            Container(
-              padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(
-                color: isSelected ? AppColors.primary.withOpacity(0.1) : AppColors.background,
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: Icon(icon, color: isSelected ? AppColors.primary : AppColors.textSecondary),
-            ),
-            const SizedBox(width: 16),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(title, style: Theme.of(context).textTheme.titleMedium),
-                  if (subtitle.isNotEmpty) ...[
-                    const SizedBox(height: 4),
-                    Text(subtitle, style: Theme.of(context).textTheme.bodyMedium),
-                  ]
-                ],
-              ),
-            ),
-            if (isSelected)
-              const Icon(Icons.check_circle, color: AppColors.primary),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildBottomBar() {
+  Widget _buildBottomBar(double amount) {
     return Container(
       padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
@@ -158,12 +123,12 @@ class _PaymentScreenState extends State<PaymentScreen> {
             ),
             child: _isProcessing 
               ? const CircularProgressIndicator(color: Colors.white)
-              : const Text('Pay with Razorpay'),
+              : Text('Pay ₹${amount.toStringAsFixed(2)} via Razorpay'),
           ),
           const SizedBox(height: 8),
           TextButton(
             onPressed: _isProcessing ? null : () => _handlePaymentSuccess(null),
-            child: const Text('Simulate Test Payment (Bypass Razorpay)', style: TextStyle(color: AppColors.textSecondary, fontSize: 12)),
+            child: const Text('Simulate Test Payment (Bypass)', style: TextStyle(color: AppColors.textSecondary, fontSize: 12)),
           ),
         ],
       ),

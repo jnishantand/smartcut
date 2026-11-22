@@ -27,15 +27,35 @@ class ServiceSelectionScreen extends StatelessWidget {
           }
           
           if (!snapshot.hasData || snapshot.data!.isEmpty) {
-            // Fallback mock UI
-            return ListView(
-              padding: const EdgeInsets.all(24.0),
-              children: [
-                _buildCategoryHeader(context, 'Haircuts'),
-                const SizedBox(height: 16),
-                _buildServiceListItem(context, SalonService(id: 's1', name: 'Classic Haircut', category: 'Haircuts', durationMinutes: 45, price: 35, advanceRequired: 10, isActive: true)),
-                _buildServiceListItem(context, SalonService(id: 's2', name: 'Kids Haircut', category: 'Haircuts', durationMinutes: 30, price: 25, advanceRequired: 5, isActive: true)),
-              ],
+            // Empty state with a button to populate real Firestore services
+            return Center(
+              child: Padding(
+                padding: const EdgeInsets.all(32.0),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    const Icon(Icons.storefront, size: 64, color: AppColors.textSecondary),
+                    const SizedBox(height: 16),
+                    Text(
+                      'No services found in database',
+                      style: Theme.of(context).textTheme.titleLarge,
+                      textAlign: TextAlign.center,
+                    ),
+                    const SizedBox(height: 8),
+                    const Text(
+                      'Tap below to add default salon services to Firestore.',
+                      textAlign: TextAlign.center,
+                      style: TextStyle(color: AppColors.textSecondary),
+                    ),
+                    const SizedBox(height: 24),
+                    ElevatedButton.icon(
+                      onPressed: () => FirestoreService().seedSampleServices(),
+                      icon: const Icon(Icons.add),
+                      label: const Text('Add Services to Database'),
+                    ),
+                  ],
+                ),
+              ),
             );
           }
 
@@ -111,7 +131,7 @@ class ServiceSelectionScreen extends StatelessWidget {
             Column(
               crossAxisAlignment: CrossAxisAlignment.end,
               children: [
-                Text('\$${service.price.toStringAsFixed(0)}', style: Theme.of(context).textTheme.titleLarge?.copyWith(color: AppColors.primary)),
+                Text('₹${service.price.toStringAsFixed(0)}', style: Theme.of(context).textTheme.titleLarge?.copyWith(color: AppColors.primary)),
                 const SizedBox(height: 8),
                 ElevatedButton(
                   onPressed: () {

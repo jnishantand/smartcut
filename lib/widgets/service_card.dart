@@ -77,7 +77,7 @@ class ServiceCard extends StatelessWidget {
                   ),
                   const SizedBox(height: 8),
                   Text(
-                    '\$$price',
+                    '₹$price',
                     style: Theme.of(context).textTheme.titleMedium?.copyWith(
                           color: AppColors.primary,
                         ),

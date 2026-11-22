@@ -234,7 +234,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
           ),
           const SizedBox(width: 16),
           Expanded(
-            child: _buildSummaryCard(context, 'Revenue', '\$450', Icons.attach_money),
+            child: _buildSummaryCard(context, 'Revenue', '₹450', Icons.currency_rupee),
           ),
         ],
       ),

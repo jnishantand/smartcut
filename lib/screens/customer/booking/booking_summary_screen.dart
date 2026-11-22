@@ -93,12 +93,12 @@ class BookingSummaryScreen extends StatelessWidget {
                 _buildCard(
                   child: Column(
                     children: [
-                      _buildDetailRow('Service Total', '\$${service.price.toStringAsFixed(2)}'),
+                      _buildDetailRow('Service Total', '₹${service.price.toStringAsFixed(2)}'),
                       const Divider(height: 24),
-                      _buildDetailRow('Advance Required', '\$${service.advanceRequired.toStringAsFixed(2)}', isBold: true, color: AppColors.primary),
+                      _buildDetailRow('Advance Required', '₹${service.advanceRequired.toStringAsFixed(2)}', isBold: true, color: AppColors.primary),
                       const SizedBox(height: 8),
                       Text(
-                        'An advance payment is required to confirm your booking. The remaining \$${(service.price - service.advanceRequired).toStringAsFixed(2)} will be paid at the salon.',
+                        'An advance payment is required to confirm your booking. The remaining ₹${(service.price - service.advanceRequired).toStringAsFixed(2)} will be paid at the salon.',
                         style: const TextStyle(color: AppColors.textSecondary, fontSize: 12),
                       ),
                     ],
@@ -172,7 +172,7 @@ class BookingSummaryScreen extends StatelessWidget {
         style: ElevatedButton.styleFrom(
           minimumSize: const Size(double.infinity, 56),
         ),
-        child: Text('Proceed to Pay \$${advanceRequired.toStringAsFixed(2)}'),
+        child: Text('Proceed to Pay ₹${advanceRequired.toStringAsFixed(2)}'),
       ),
     );
   }
