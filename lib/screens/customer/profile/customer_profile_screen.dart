@@ -125,11 +125,8 @@ class CustomerProfileScreen extends StatelessWidget {
               await GoogleSignIn.instance.signOut();
             } catch (_) {}
             if (context.mounted) {
-              Navigator.pushAndRemoveUntil(
-                context, 
-                MaterialPageRoute(builder: (_) => const LoginScreen()),
-                (route) => false,
-              );
+              // Pop all pushed routes back to AuthWrapper so AuthWrapper can cleanly switch to LoginScreen
+              Navigator.of(context).popUntil((route) => route.isFirst);
             }
           },
         ),
