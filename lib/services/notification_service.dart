@@ -103,24 +103,27 @@ class NotificationService {
     FirebaseAuth.instance.authStateChanges().listen((user) {
       _notificationSubscription?.cancel();
       if (user != null) {
+        bool isFirstSnapshot = true;
+
         _notificationSubscription = FirebaseFirestore.instance
             .collection('notifications')
             .where('userId', whereIn: [user.uid, 'all'])
             .orderBy('createdAt', descending: true)
             .snapshots()
             .listen((snapshot) {
+          if (isFirstSnapshot) {
+            isFirstSnapshot = false;
+            return; // Ignore pre-existing notifications on initial login
+          }
+
           for (var change in snapshot.docChanges) {
             if (change.type == DocumentChangeType.added) {
               final data = change.doc.data() as Map<String, dynamic>?;
               if (data != null) {
-                final createdAt = (data['createdAt'] as Timestamp?)?.toDate();
-                // Only show system banner for notifications created AFTER the app initialized
-                if (_initTime != null && createdAt != null && createdAt.isAfter(_initTime!)) {
-                  showLocalNotification(
-                    title: data['title'] ?? 'SmartCut Announcement',
-                    body: data['body'] ?? '',
-                  );
-                }
+                showLocalNotification(
+                  title: data['title'] ?? 'SmartCut Announcement',
+                  body: data['body'] ?? '',
+                );
               }
             }
           }
