@@ -41,7 +41,7 @@ class ServiceCard extends StatelessWidget {
           children: [
             // Image Placeholder (or Network Image)
             Container(
-              height: 100,
+              height: 90, // Reduced from 100 to fix overflow
               decoration: BoxDecoration(
                 color: AppColors.secondary,
                 borderRadius: const BorderRadius.vertical(top: Radius.circular(15)),

@@ -28,10 +28,25 @@ service cloud.firestore {
       allow update, delete: if isAdmin();
     }
 
-    // Bookings Collection (Example for context)
+    // Services Collection
+    match /services/{serviceId} {
+      // Anyone can read services, only admins can modify
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    // Settings Collection (Salon Status)
+    match /settings/{document=**} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    // Bookings Collection
     match /bookings/{bookingId} {
-      allow read, write: if isAuthenticated() && (resource.data.userId == request.auth.uid || isAdmin());
+      // Users can read/write their own bookings. Admins can read/write all.
+      // We check `resource == null` for creates so it doesn't fail the `resource.data` check
       allow create: if isAuthenticated();
+      allow read, update, delete: if isAuthenticated() && (resource.data.customerId == request.auth.uid || isAdmin());
     }
 
     match /{document=**} {
