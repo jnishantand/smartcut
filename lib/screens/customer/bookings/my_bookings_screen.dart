@@ -1,5 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import '../../../theme/app_colors.dart';
+import '../../../providers/user_provider.dart';
+import '../../../services/firestore_service.dart';
+import '../../../models/booking.dart';
 
 class MyBookingsScreen extends StatelessWidget {
   const MyBookingsScreen({super.key});
@@ -34,56 +38,128 @@ class MyBookingsScreen extends StatelessWidget {
   }
 
   Widget _buildUpcomingBookings() {
-    return ListView(
-      padding: const EdgeInsets.all(16.0),
-      children: [
-        _buildBookingCard(
-          serviceName: 'Classic Haircut',
-          date: 'Tue, 12 Nov 2024',
-          time: '09:45 AM',
-          staffName: 'Michael Brown',
-          bookingId: '#SC-8492',
-          paymentStatus: 'Advance Paid',
-          status: 'Confirmed',
-          isUpcoming: true,
-        ),
-      ],
+    return Consumer<UserProvider>(
+      builder: (context, userProvider, child) {
+        final profile = userProvider.userProfile;
+        if (profile == null) return const Center(child: Text("Please log in"));
+
+        return StreamBuilder<List<Booking>>(
+          stream: FirestoreService().getUserBookings(profile.uid),
+          builder: (context, snapshot) {
+            if (snapshot.connectionState == ConnectionState.waiting) {
+              return const Center(child: CircularProgressIndicator());
+            }
+
+            final bookings = snapshot.data?.where((b) => b.bookingStatus == 'confirmed').toList() ?? [];
+
+            if (bookings.isEmpty) {
+              return const Center(child: Text("No upcoming bookings"));
+            }
+
+            return ListView.builder(
+              padding: const EdgeInsets.all(16.0),
+              itemCount: bookings.length,
+              itemBuilder: (context, index) {
+                final b = bookings[index];
+                return _buildBookingCard(
+                  serviceName: b.serviceName,
+                  date: '${b.appointmentDate.day}/${b.appointmentDate.month}/${b.appointmentDate.year}',
+                  time: b.timeSlot,
+                  staffName: b.staffName,
+                  bookingId: '#${b.id}',
+                  paymentStatus: 'Advance Paid',
+                  status: 'Confirmed',
+                  isUpcoming: true,
+                );
+              },
+            );
+          }
+        );
+      }
     );
   }
 
   Widget _buildCompletedBookings() {
-    return ListView(
-      padding: const EdgeInsets.all(16.0),
-      children: [
-        _buildBookingCard(
-          serviceName: 'Beard Trim',
-          date: 'Sat, 02 Nov 2024',
-          time: '02:00 PM',
-          staffName: 'Sarah Jenkins',
-          bookingId: '#SC-7301',
-          paymentStatus: 'Paid in Full',
-          status: 'Completed',
-          isUpcoming: false,
-        ),
-      ],
+    return Consumer<UserProvider>(
+      builder: (context, userProvider, child) {
+        final profile = userProvider.userProfile;
+        if (profile == null) return const Center(child: Text("Please log in"));
+
+        return StreamBuilder<List<Booking>>(
+          stream: FirestoreService().getUserBookings(profile.uid),
+          builder: (context, snapshot) {
+            if (snapshot.connectionState == ConnectionState.waiting) {
+              return const Center(child: CircularProgressIndicator());
+            }
+
+            final bookings = snapshot.data?.where((b) => b.bookingStatus == 'completed').toList() ?? [];
+
+            if (bookings.isEmpty) {
+              return const Center(child: Text("No completed bookings"));
+            }
+
+            return ListView.builder(
+              padding: const EdgeInsets.all(16.0),
+              itemCount: bookings.length,
+              itemBuilder: (context, index) {
+                final b = bookings[index];
+                return _buildBookingCard(
+                  serviceName: b.serviceName,
+                  date: '${b.appointmentDate.day}/${b.appointmentDate.month}/${b.appointmentDate.year}',
+                  time: b.timeSlot,
+                  staffName: b.staffName,
+                  bookingId: '#${b.id}',
+                  paymentStatus: 'Paid in Full',
+                  status: 'Completed',
+                  isUpcoming: false,
+                );
+              },
+            );
+          }
+        );
+      }
     );
   }
 
   Widget _buildCancelledBookings() {
-    return ListView(
-      padding: const EdgeInsets.all(16.0),
-      children: [
-        _buildBookingCard(
-          serviceName: 'Hair Coloring',
-          date: 'Fri, 25 Oct 2024',
-          time: '11:00 AM',
-          staffName: 'Any Available',
-          bookingId: '#SC-6544',
-          paymentStatus: 'Refunded',
-          status: 'Cancelled',
-          isUpcoming: false,
-        ),
-      ],
+    return Consumer<UserProvider>(
+      builder: (context, userProvider, child) {
+        final profile = userProvider.userProfile;
+        if (profile == null) return const Center(child: Text("Please log in"));
+
+        return StreamBuilder<List<Booking>>(
+          stream: FirestoreService().getUserBookings(profile.uid),
+          builder: (context, snapshot) {
+            if (snapshot.connectionState == ConnectionState.waiting) {
+              return const Center(child: CircularProgressIndicator());
+            }
+
+            final bookings = snapshot.data?.where((b) => b.bookingStatus == 'cancelled').toList() ?? [];
+
+            if (bookings.isEmpty) {
+              return const Center(child: Text("No cancelled bookings"));
+            }
+
+            return ListView.builder(
+              padding: const EdgeInsets.all(16.0),
+              itemCount: bookings.length,
+              itemBuilder: (context, index) {
+                final b = bookings[index];
+                return _buildBookingCard(
+                  serviceName: b.serviceName,
+                  date: '${b.appointmentDate.day}/${b.appointmentDate.month}/${b.appointmentDate.year}',
+                  time: b.timeSlot,
+                  staffName: b.staffName,
+                  bookingId: '#${b.id}',
+                  paymentStatus: 'Refunded',
+                  status: 'Cancelled',
+                  isUpcoming: false,
+                );
+              },
+            );
+          }
+        );
+      }
     );
   }
 
