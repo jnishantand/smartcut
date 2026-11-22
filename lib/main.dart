@@ -3,7 +3,7 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:provider/provider.dart';
 import 'firebase_options.dart';
 import 'theme/app_theme.dart';
-import 'screens/auth/login_screen.dart';
+import 'screens/auth/auth_wrapper.dart';
 import 'providers/user_provider.dart';
 import 'providers/booking_provider.dart';
 
@@ -35,13 +35,13 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
       title: 'SmartCut',
       theme: AppTheme.lightTheme,
-      home: const LoginScreen(),
+      home: const AuthWrapper(),
       debugShowCheckedModeBanner: false,
       onUnknownRoute: (settings) {
         // This catches the Firebase Auth callback deep links and prevents 
         // the app from throwing a routing exception.
         return MaterialPageRoute(
-          builder: (context) => const LoginScreen(),
+          builder: (context) => const AuthWrapper(),
         );
       },
     );
