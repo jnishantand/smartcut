@@ -47,6 +47,9 @@ class AdminQueueScreen extends StatelessWidget {
     return StreamBuilder<List<Booking>>(
       stream: FirestoreService().getAdminBookings('confirmed'),
       builder: (context, snapshot) {
+        if (snapshot.hasError) {
+          return Center(child: Text("Error: ${snapshot.error}", style: const TextStyle(color: AppColors.error)));
+        }
         if (snapshot.connectionState == ConnectionState.waiting) {
           return const Center(child: CircularProgressIndicator());
         }
@@ -83,6 +86,9 @@ class AdminQueueScreen extends StatelessWidget {
     return StreamBuilder<List<Booking>>(
       stream: FirestoreService().getAdminBookings('serving'),
       builder: (context, snapshot) {
+        if (snapshot.hasError) {
+          return Center(child: Text("Error: ${snapshot.error}", style: const TextStyle(color: AppColors.error)));
+        }
         if (snapshot.connectionState == ConnectionState.waiting) {
           return const Center(child: CircularProgressIndicator());
         }
@@ -118,6 +124,9 @@ class AdminQueueScreen extends StatelessWidget {
     return StreamBuilder<List<Booking>>(
       stream: FirestoreService().getAdminBookings('completed'),
       builder: (context, snapshot) {
+        if (snapshot.hasError) {
+          return Center(child: Text("Error: ${snapshot.error}", style: const TextStyle(color: AppColors.error)));
+        }
         if (snapshot.connectionState == ConnectionState.waiting) {
           return const Center(child: CircularProgressIndicator());
         }
