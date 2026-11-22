@@ -174,11 +174,12 @@ class _PaymentScreenState extends State<PaymentScreen> {
     var options = {
       'key': 'rzp_test_U34oMk0qZkEFzg', // Using the Test Key from CSV
       'amount': amountInCents,
+      'currency': 'INR', // Explicitly setting currency helps bypass some local restrictions on test accounts
       'name': 'Smartcut Salon',
       'description': 'Advance Payment for ${service.name}',
       'prefill': {
-        'contact': profile?.phoneNumber ?? '',
-        'email': profile?.email ?? ''
+        'contact': profile?.phoneNumber ?? '9876543210',
+        'email': profile?.email ?? 'test@example.com'
       },
       'theme': {
         'color': '#2457A6' // AppColors.primary hex
