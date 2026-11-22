@@ -6,8 +6,10 @@ import '../customer/customer_main_screen.dart';
 
 class SignUpScreen extends StatefulWidget {
   final String phoneNumber;
+  final String? email;
+  final String? name;
 
-  const SignUpScreen({super.key, required this.phoneNumber});
+  const SignUpScreen({super.key, required this.phoneNumber, this.email, this.name});
 
   @override
   State<SignUpScreen> createState() => _SignUpScreenState();
@@ -18,6 +20,13 @@ class _SignUpScreenState extends State<SignUpScreen> {
   final _nameController = TextEditingController();
   final _emailController = TextEditingController();
   bool _isLoading = false;
+
+  @override
+  void initState() {
+    super.initState();
+    if (widget.name != null) _nameController.text = widget.name!;
+    if (widget.email != null) _emailController.text = widget.email!;
+  }
 
   Future<void> _completeSignUp() async {
     if (!_formKey.currentState!.validate()) return;

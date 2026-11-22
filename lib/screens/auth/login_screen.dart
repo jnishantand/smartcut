@@ -1,9 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:google_sign_in/google_sign_in.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import '../../theme/app_colors.dart';
 import 'otp_screen.dart';
 import '../customer/customer_main_screen.dart';
 import '../admin/admin_main_screen.dart';
+import 'signup_screen.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -23,7 +26,90 @@ class _LoginScreenState extends State<LoginScreen> {
         const SnackBar(content: Text('Please enter your phone number')),
       );
       return;
+    Future<void> _signInWithGoogle() async {
+    setState(() => _isLoading = true);
+    
+    try {
+      final GoogleSignInAccount? googleUser = await GoogleSignIn().signIn();
+      if (googleUser == null) {
+        setState(() => _isLoading = false);
+        return; // User canceled the sign-in
+      }
+
+      final GoogleSignInAuthentication googleAuth = await googleUser.authentication;
+      final OAuthCredential credential = GoogleAuthProvider.credential(
+        accessToken: googleAuth.accessToken,
+        idToken: googleAuth.idToken,
+      );
+
+      final UserCredential userCredential = 
+          await FirebaseAuth.instance.signInWithCredential(credential);
+          
+      if (userCredential.user != null) {
+        await _checkUserRoleAndNavigate(userCredential.user!);
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Google Sign-In failed: $e')),
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() => _isLoading = false);
+      }
     }
+  }
+
+  Future<void> _checkUserRoleAndNavigate(User user) async {
+    try {
+      DocumentSnapshot userDoc = await FirebaseFirestore.instance
+          .collection('users')
+          .doc(user.uid)
+          .get();
+
+      if (!userDoc.exists) {
+        if (mounted) {
+          Navigator.pushAndRemoveUntil(
+            context,
+            MaterialPageRoute(
+              builder: (_) => SignUpScreen(
+                phoneNumber: user.phoneNumber ?? '',
+                email: user.email,
+                name: user.displayName,
+              ),
+            ),
+            (route) => false,
+          );
+        }
+      } else {
+        final data = userDoc.data() as Map<String, dynamic>?;
+        final role = data?['role'] ?? 'customer';
+        
+        if (mounted) {
+          if (role == 'admin') {
+            Navigator.pushAndRemoveUntil(
+              context,
+              MaterialPageRoute(builder: (_) => AdminMainScreen()),
+              (route) => false,
+            );
+          } else {
+            Navigator.pushAndRemoveUntil(
+              context,
+              MaterialPageRoute(builder: (_) => CustomerMainScreen()),
+              (route) => false,
+            );
+          }
+        }
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error fetching profile: $e')),
+        );
+      }
+    }
+  }
 
     setState(() => _isLoading = true);
 
@@ -34,13 +120,179 @@ class _LoginScreenState extends State<LoginScreen> {
           // Auto-resolution (usually Android only)
           // We can handle auto-sign in here if needed, but usually we just let the user 
           // type it in on the next screen anyway to keep the flow consistent, or we can sign in directly.
-        },
+        Future<void> _signInWithGoogle() async {
+    setState(() => _isLoading = true);
+    
+    try {
+      final GoogleSignInAccount? googleUser = await GoogleSignIn().signIn();
+      if (googleUser == null) {
+        setState(() => _isLoading = false);
+        return; // User canceled the sign-in
+      }
+
+      final GoogleSignInAuthentication googleAuth = await googleUser.authentication;
+      final OAuthCredential credential = GoogleAuthProvider.credential(
+        accessToken: googleAuth.accessToken,
+        idToken: googleAuth.idToken,
+      );
+
+      final UserCredential userCredential = 
+          await FirebaseAuth.instance.signInWithCredential(credential);
+          
+      if (userCredential.user != null) {
+        await _checkUserRoleAndNavigate(userCredential.user!);
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Google Sign-In failed: $e')),
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() => _isLoading = false);
+      }
+    }
+  }
+
+  Future<void> _checkUserRoleAndNavigate(User user) async {
+    try {
+      DocumentSnapshot userDoc = await FirebaseFirestore.instance
+          .collection('users')
+          .doc(user.uid)
+          .get();
+
+      if (!userDoc.exists) {
+        if (mounted) {
+          Navigator.pushAndRemoveUntil(
+            context,
+            MaterialPageRoute(
+              builder: (_) => SignUpScreen(
+                phoneNumber: user.phoneNumber ?? '',
+                email: user.email,
+                name: user.displayName,
+              ),
+            ),
+            (route) => false,
+          );
+        }
+      } else {
+        final data = userDoc.data() as Map<String, dynamic>?;
+        final role = data?['role'] ?? 'customer';
+        
+        if (mounted) {
+          if (role == 'admin') {
+            Navigator.pushAndRemoveUntil(
+              context,
+              MaterialPageRoute(builder: (_) => AdminMainScreen()),
+              (route) => false,
+            );
+          } else {
+            Navigator.pushAndRemoveUntil(
+              context,
+              MaterialPageRoute(builder: (_) => CustomerMainScreen()),
+              (route) => false,
+            );
+          }
+        }
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error fetching profile: $e')),
+        );
+      }
+    }
+  },
         verificationFailed: (FirebaseAuthException e) {
           setState(() => _isLoading = false);
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(content: Text('Verification Failed: ${e.message}')),
           );
-        },
+        Future<void> _signInWithGoogle() async {
+    setState(() => _isLoading = true);
+    
+    try {
+      final GoogleSignInAccount? googleUser = await GoogleSignIn().signIn();
+      if (googleUser == null) {
+        setState(() => _isLoading = false);
+        return; // User canceled the sign-in
+      }
+
+      final GoogleSignInAuthentication googleAuth = await googleUser.authentication;
+      final OAuthCredential credential = GoogleAuthProvider.credential(
+        accessToken: googleAuth.accessToken,
+        idToken: googleAuth.idToken,
+      );
+
+      final UserCredential userCredential = 
+          await FirebaseAuth.instance.signInWithCredential(credential);
+          
+      if (userCredential.user != null) {
+        await _checkUserRoleAndNavigate(userCredential.user!);
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Google Sign-In failed: $e')),
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() => _isLoading = false);
+      }
+    }
+  }
+
+  Future<void> _checkUserRoleAndNavigate(User user) async {
+    try {
+      DocumentSnapshot userDoc = await FirebaseFirestore.instance
+          .collection('users')
+          .doc(user.uid)
+          .get();
+
+      if (!userDoc.exists) {
+        if (mounted) {
+          Navigator.pushAndRemoveUntil(
+            context,
+            MaterialPageRoute(
+              builder: (_) => SignUpScreen(
+                phoneNumber: user.phoneNumber ?? '',
+                email: user.email,
+                name: user.displayName,
+              ),
+            ),
+            (route) => false,
+          );
+        }
+      } else {
+        final data = userDoc.data() as Map<String, dynamic>?;
+        final role = data?['role'] ?? 'customer';
+        
+        if (mounted) {
+          if (role == 'admin') {
+            Navigator.pushAndRemoveUntil(
+              context,
+              MaterialPageRoute(builder: (_) => AdminMainScreen()),
+              (route) => false,
+            );
+          } else {
+            Navigator.pushAndRemoveUntil(
+              context,
+              MaterialPageRoute(builder: (_) => CustomerMainScreen()),
+              (route) => false,
+            );
+          }
+        }
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error fetching profile: $e')),
+        );
+      }
+    }
+  },
         codeSent: (String verificationId, int? resendToken) {
           setState(() => _isLoading = false);
           Navigator.push(
@@ -52,14 +304,346 @@ class _LoginScreenState extends State<LoginScreen> {
               ),
             ),
           );
-        },
+        Future<void> _signInWithGoogle() async {
+    setState(() => _isLoading = true);
+    
+    try {
+      final GoogleSignInAccount? googleUser = await GoogleSignIn().signIn();
+      if (googleUser == null) {
+        setState(() => _isLoading = false);
+        return; // User canceled the sign-in
+      }
+
+      final GoogleSignInAuthentication googleAuth = await googleUser.authentication;
+      final OAuthCredential credential = GoogleAuthProvider.credential(
+        accessToken: googleAuth.accessToken,
+        idToken: googleAuth.idToken,
+      );
+
+      final UserCredential userCredential = 
+          await FirebaseAuth.instance.signInWithCredential(credential);
+          
+      if (userCredential.user != null) {
+        await _checkUserRoleAndNavigate(userCredential.user!);
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Google Sign-In failed: $e')),
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() => _isLoading = false);
+      }
+    }
+  }
+
+  Future<void> _checkUserRoleAndNavigate(User user) async {
+    try {
+      DocumentSnapshot userDoc = await FirebaseFirestore.instance
+          .collection('users')
+          .doc(user.uid)
+          .get();
+
+      if (!userDoc.exists) {
+        if (mounted) {
+          Navigator.pushAndRemoveUntil(
+            context,
+            MaterialPageRoute(
+              builder: (_) => SignUpScreen(
+                phoneNumber: user.phoneNumber ?? '',
+                email: user.email,
+                name: user.displayName,
+              ),
+            ),
+            (route) => false,
+          );
+        }
+      } else {
+        final data = userDoc.data() as Map<String, dynamic>?;
+        final role = data?['role'] ?? 'customer';
+        
+        if (mounted) {
+          if (role == 'admin') {
+            Navigator.pushAndRemoveUntil(
+              context,
+              MaterialPageRoute(builder: (_) => AdminMainScreen()),
+              (route) => false,
+            );
+          } else {
+            Navigator.pushAndRemoveUntil(
+              context,
+              MaterialPageRoute(builder: (_) => CustomerMainScreen()),
+              (route) => false,
+            );
+          }
+        }
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error fetching profile: $e')),
+        );
+      }
+    }
+  },
         codeAutoRetrievalTimeout: (String verificationId) {},
       );
+    Future<void> _signInWithGoogle() async {
+    setState(() => _isLoading = true);
+    
+    try {
+      final GoogleSignInAccount? googleUser = await GoogleSignIn().signIn();
+      if (googleUser == null) {
+        setState(() => _isLoading = false);
+        return; // User canceled the sign-in
+      }
+
+      final GoogleSignInAuthentication googleAuth = await googleUser.authentication;
+      final OAuthCredential credential = GoogleAuthProvider.credential(
+        accessToken: googleAuth.accessToken,
+        idToken: googleAuth.idToken,
+      );
+
+      final UserCredential userCredential = 
+          await FirebaseAuth.instance.signInWithCredential(credential);
+          
+      if (userCredential.user != null) {
+        await _checkUserRoleAndNavigate(userCredential.user!);
+      }
     } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Google Sign-In failed: $e')),
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() => _isLoading = false);
+      }
+    }
+  }
+
+  Future<void> _checkUserRoleAndNavigate(User user) async {
+    try {
+      DocumentSnapshot userDoc = await FirebaseFirestore.instance
+          .collection('users')
+          .doc(user.uid)
+          .get();
+
+      if (!userDoc.exists) {
+        if (mounted) {
+          Navigator.pushAndRemoveUntil(
+            context,
+            MaterialPageRoute(
+              builder: (_) => SignUpScreen(
+                phoneNumber: user.phoneNumber ?? '',
+                email: user.email,
+                name: user.displayName,
+              ),
+            ),
+            (route) => false,
+          );
+        }
+      } else {
+        final data = userDoc.data() as Map<String, dynamic>?;
+        final role = data?['role'] ?? 'customer';
+        
+        if (mounted) {
+          if (role == 'admin') {
+            Navigator.pushAndRemoveUntil(
+              context,
+              MaterialPageRoute(builder: (_) => AdminMainScreen()),
+              (route) => false,
+            );
+          } else {
+            Navigator.pushAndRemoveUntil(
+              context,
+              MaterialPageRoute(builder: (_) => CustomerMainScreen()),
+              (route) => false,
+            );
+          }
+        }
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error fetching profile: $e')),
+        );
+      }
+    }
+  } catch (e) {
       setState(() => _isLoading = false);
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('An error occurred: $e')),
       );
+    Future<void> _signInWithGoogle() async {
+    setState(() => _isLoading = true);
+    
+    try {
+      final GoogleSignInAccount? googleUser = await GoogleSignIn().signIn();
+      if (googleUser == null) {
+        setState(() => _isLoading = false);
+        return; // User canceled the sign-in
+      }
+
+      final GoogleSignInAuthentication googleAuth = await googleUser.authentication;
+      final OAuthCredential credential = GoogleAuthProvider.credential(
+        accessToken: googleAuth.accessToken,
+        idToken: googleAuth.idToken,
+      );
+
+      final UserCredential userCredential = 
+          await FirebaseAuth.instance.signInWithCredential(credential);
+          
+      if (userCredential.user != null) {
+        await _checkUserRoleAndNavigate(userCredential.user!);
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Google Sign-In failed: $e')),
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() => _isLoading = false);
+      }
+    }
+  }
+
+  Future<void> _checkUserRoleAndNavigate(User user) async {
+    try {
+      DocumentSnapshot userDoc = await FirebaseFirestore.instance
+          .collection('users')
+          .doc(user.uid)
+          .get();
+
+      if (!userDoc.exists) {
+        if (mounted) {
+          Navigator.pushAndRemoveUntil(
+            context,
+            MaterialPageRoute(
+              builder: (_) => SignUpScreen(
+                phoneNumber: user.phoneNumber ?? '',
+                email: user.email,
+                name: user.displayName,
+              ),
+            ),
+            (route) => false,
+          );
+        }
+      } else {
+        final data = userDoc.data() as Map<String, dynamic>?;
+        final role = data?['role'] ?? 'customer';
+        
+        if (mounted) {
+          if (role == 'admin') {
+            Navigator.pushAndRemoveUntil(
+              context,
+              MaterialPageRoute(builder: (_) => AdminMainScreen()),
+              (route) => false,
+            );
+          } else {
+            Navigator.pushAndRemoveUntil(
+              context,
+              MaterialPageRoute(builder: (_) => CustomerMainScreen()),
+              (route) => false,
+            );
+          }
+        }
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error fetching profile: $e')),
+        );
+      }
+    }
+  }
+  Future<void> _signInWithGoogle() async {
+    setState(() => _isLoading = true);
+    
+    try {
+      final GoogleSignInAccount? googleUser = await GoogleSignIn().signIn();
+      if (googleUser == null) {
+        setState(() => _isLoading = false);
+        return; // User canceled the sign-in
+      }
+
+      final GoogleSignInAuthentication googleAuth = await googleUser.authentication;
+      final OAuthCredential credential = GoogleAuthProvider.credential(
+        accessToken: googleAuth.accessToken,
+        idToken: googleAuth.idToken,
+      );
+
+      final UserCredential userCredential = 
+          await FirebaseAuth.instance.signInWithCredential(credential);
+          
+      if (userCredential.user != null) {
+        await _checkUserRoleAndNavigate(userCredential.user!);
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Google Sign-In failed: $e')),
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() => _isLoading = false);
+      }
+    }
+  }
+
+  Future<void> _checkUserRoleAndNavigate(User user) async {
+    try {
+      DocumentSnapshot userDoc = await FirebaseFirestore.instance
+          .collection('users')
+          .doc(user.uid)
+          .get();
+
+      if (!userDoc.exists) {
+        if (mounted) {
+          Navigator.pushAndRemoveUntil(
+            context,
+            MaterialPageRoute(
+              builder: (_) => SignUpScreen(
+                phoneNumber: user.phoneNumber ?? '',
+                email: user.email,
+                name: user.displayName,
+              ),
+            ),
+            (route) => false,
+          );
+        }
+      } else {
+        final data = userDoc.data() as Map<String, dynamic>?;
+        final role = data?['role'] ?? 'customer';
+        
+        if (mounted) {
+          if (role == 'admin') {
+            Navigator.pushAndRemoveUntil(
+              context,
+              MaterialPageRoute(builder: (_) => AdminMainScreen()),
+              (route) => false,
+            );
+          } else {
+            Navigator.pushAndRemoveUntil(
+              context,
+              MaterialPageRoute(builder: (_) => CustomerMainScreen()),
+              (route) => false,
+            );
+          }
+        }
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error fetching profile: $e')),
+        );
+      }
     }
   }
 
@@ -113,46 +697,111 @@ class _LoginScreenState extends State<LoginScreen> {
                   Expanded(child: Divider()),
                   Padding(
                     padding: EdgeInsets.symmetric(horizontal: 16.0),
-                    child: Text('DEVELOPER QUICK ACCESS', style: TextStyle(color: AppColors.textSecondary, fontSize: 10)),
+                    child: Text('OR', style: TextStyle(color: AppColors.textSecondary, fontSize: 12)),
                   ),
                   Expanded(child: Divider()),
                 ],
               ),
-              const SizedBox(height: 16),
+              const SizedBox(height: 24),
               
-              Row(
-                children: [
-                  Expanded(
-                    child: OutlinedButton(
-                      onPressed: () {
-                        // Bypass directly to Customer
-                        Navigator.pushReplacement(
-                          context, 
-                          MaterialPageRoute(builder: (_) => CustomerMainScreen())
-                        );
-                      },
-                      child: const Text('Bypass to Customer', style: TextStyle(fontSize: 12)),
-                    ),
-                  ),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    child: OutlinedButton(
-                      onPressed: () {
-                        // Bypass directly to Admin
-                        Navigator.pushReplacement(
-                          context, 
-                          MaterialPageRoute(builder: (_) => AdminMainScreen())
-                        );
-                      },
-                      child: const Text('Bypass to Admin', style: TextStyle(fontSize: 12)),
-                    ),
-                  ),
-                ],
+              OutlinedButton.icon(
+                onPressed: _isLoading ? null : _signInWithGoogle,
+                icon: Image.network(
+                  'https://upload.wikimedia.org/wikipedia/commons/c/c1/Google_%22G%22_logo.svg',
+                  height: 24,
+                ),
+                label: const Text('Continue with Google'),
+                style: OutlinedButton.styleFrom(
+                  minimumSize: const Size(double.infinity, 56),
+                ),
               ),
             ],
           ),
         ),
       ),
     );
+  Future<void> _signInWithGoogle() async {
+    setState(() => _isLoading = true);
+    
+    try {
+      final GoogleSignInAccount? googleUser = await GoogleSignIn().signIn();
+      if (googleUser == null) {
+        setState(() => _isLoading = false);
+        return; // User canceled the sign-in
+      }
+
+      final GoogleSignInAuthentication googleAuth = await googleUser.authentication;
+      final OAuthCredential credential = GoogleAuthProvider.credential(
+        accessToken: googleAuth.accessToken,
+        idToken: googleAuth.idToken,
+      );
+
+      final UserCredential userCredential = 
+          await FirebaseAuth.instance.signInWithCredential(credential);
+          
+      if (userCredential.user != null) {
+        await _checkUserRoleAndNavigate(userCredential.user!);
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Google Sign-In failed: $e')),
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() => _isLoading = false);
+      }
+    }
+  }
+
+  Future<void> _checkUserRoleAndNavigate(User user) async {
+    try {
+      DocumentSnapshot userDoc = await FirebaseFirestore.instance
+          .collection('users')
+          .doc(user.uid)
+          .get();
+
+      if (!userDoc.exists) {
+        if (mounted) {
+          Navigator.pushAndRemoveUntil(
+            context,
+            MaterialPageRoute(
+              builder: (_) => SignUpScreen(
+                phoneNumber: user.phoneNumber ?? '',
+                email: user.email,
+                name: user.displayName,
+              ),
+            ),
+            (route) => false,
+          );
+        }
+      } else {
+        final data = userDoc.data() as Map<String, dynamic>?;
+        final role = data?['role'] ?? 'customer';
+        
+        if (mounted) {
+          if (role == 'admin') {
+            Navigator.pushAndRemoveUntil(
+              context,
+              MaterialPageRoute(builder: (_) => AdminMainScreen()),
+              (route) => false,
+            );
+          } else {
+            Navigator.pushAndRemoveUntil(
+              context,
+              MaterialPageRoute(builder: (_) => CustomerMainScreen()),
+              (route) => false,
+            );
+          }
+        }
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error fetching profile: $e')),
+        );
+      }
+    }
   }
 }
