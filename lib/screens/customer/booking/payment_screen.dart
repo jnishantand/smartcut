@@ -1,6 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import 'package:uuid/uuid.dart';
 import '../../../theme/app_colors.dart';
-import 'booking_confirmation_screen.dart'; // We'll create this next
+import '../../../providers/booking_provider.dart';
+import '../../../providers/user_provider.dart';
+import '../../../models/booking.dart';
+import '../../../services/firestore_service.dart';
+import 'booking_confirmation_screen.dart';
 
 class PaymentScreen extends StatefulWidget {
   const PaymentScreen({super.key});
@@ -15,6 +21,13 @@ class _PaymentScreenState extends State<PaymentScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final bookingProvider = context.watch<BookingProvider>();
+    final service = bookingProvider.selectedService;
+    
+    if (service == null) {
+      return const Scaffold(body: Center(child: Text('Error: No service selected')));
+    }
+
     return Scaffold(
       appBar: AppBar(
         title: const Text('Payment'),
@@ -35,11 +48,11 @@ class _PaymentScreenState extends State<PaymentScreen> {
                     color: AppColors.primary,
                     borderRadius: BorderRadius.circular(16),
                   ),
-                  child: const Column(
+                  child: Column(
                     children: [
-                      Text('Amount to Pay', style: TextStyle(color: Colors.white70, fontSize: 16)),
-                      SizedBox(height: 8),
-                      Text('\$10.00', style: TextStyle(color: Colors.white, fontSize: 40, fontWeight: FontWeight.bold)),
+                      const Text('Amount to Pay', style: TextStyle(color: Colors.white70, fontSize: 16)),
+                      const SizedBox(height: 8),
+                      Text('\$${service.advanceRequired.toStringAsFixed(2)}', style: const TextStyle(color: Colors.white, fontSize: 40, fontWeight: FontWeight.bold)),
                     ],
                   ),
                 ),
@@ -130,19 +143,62 @@ class _PaymentScreenState extends State<PaymentScreen> {
     );
   }
 
-  void _processPayment() {
+  Future<void> _processPayment() async {
     setState(() => _isProcessing = true);
     
-    // Simulate network delay
-    Future.delayed(const Duration(seconds: 2), () {
+    final bookingProvider = context.read<BookingProvider>();
+    final userProvider = context.read<UserProvider>();
+    
+    final service = bookingProvider.selectedService!;
+    final staffName = bookingProvider.selectedStaffName ?? 'Any Available';
+    final staffId = bookingProvider.selectedStaffId ?? 'any';
+    final date = bookingProvider.selectedDate!;
+    final time = bookingProvider.selectedTime!;
+    final profile = userProvider.userProfile;
+
+    // Simulate network delay for payment gateway
+    await Future.delayed(const Duration(seconds: 2));
+
+    try {
+      final String bookingId = const Uuid().v4().substring(0, 8).toUpperCase();
+
+      final booking = Booking(
+        id: bookingId,
+        customerId: profile?.uid ?? 'unknown',
+        customerName: profile?.name ?? 'Guest',
+        serviceId: service.id,
+        serviceName: service.name,
+        staffId: staffId,
+        staffName: staffName,
+        appointmentDate: date,
+        timeSlot: time,
+        totalAmount: service.price,
+        advancePaid: service.advanceRequired,
+        paymentStatus: 'advance_paid',
+        bookingStatus: 'confirmed',
+        createdAt: DateTime.now(),
+      );
+
+      await FirestoreService().createBooking(booking);
+
       if (mounted) {
         setState(() => _isProcessing = false);
+        // Reset the cart
+        bookingProvider.reset();
+        
         Navigator.pushAndRemoveUntil(
           context, 
-          MaterialPageRoute(builder: (_) => const BookingConfirmationScreen()),
+          MaterialPageRoute(builder: (_) => BookingConfirmationScreen(booking: booking)),
           (route) => false // Clear stack to prevent going back to payment
         );
       }
-    });
+    } catch(e) {
+      if (mounted) {
+        setState(() => _isProcessing = false);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Failed to complete booking: $e')),
+        );
+      }
+    }
   }
 }

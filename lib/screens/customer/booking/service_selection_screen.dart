@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import '../../../theme/app_colors.dart';
-import '../../../widgets/service_card.dart';
-import 'staff_selection_screen.dart'; // We'll create this next
+import '../../../models/salon_service.dart';
+import '../../../services/firestore_service.dart';
+import '../../../providers/booking_provider.dart';
+import 'staff_selection_screen.dart';
 
 class ServiceSelectionScreen extends StatelessWidget {
   const ServiceSelectionScreen({super.key});
@@ -16,23 +19,51 @@ class ServiceSelectionScreen extends StatelessWidget {
           onPressed: () => Navigator.pop(context),
         ),
       ),
-      body: ListView(
-        padding: const EdgeInsets.all(24.0),
-        children: [
-          _buildCategoryHeader(context, 'Haircuts'),
-          const SizedBox(height: 16),
-          _buildServiceListItem(context, 'Classic Haircut', '45 mins', '35'),
-          _buildServiceListItem(context, 'Skin Fade', '60 mins', '45'),
-          _buildServiceListItem(context, 'Kids Haircut', '30 mins', '25'),
+      body: StreamBuilder<List<SalonService>>(
+        stream: FirestoreService().getActiveServices(),
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return const Center(child: CircularProgressIndicator());
+          }
           
-          const SizedBox(height: 32),
-          
-          _buildCategoryHeader(context, 'Beard & Grooming'),
-          const SizedBox(height: 16),
-          _buildServiceListItem(context, 'Beard Trim', '30 mins', '20'),
-          _buildServiceListItem(context, 'Hot Towel Shave', '45 mins', '35'),
-          _buildServiceListItem(context, 'Full Grooming (Hair & Beard)', '1 hr 15 mins', '60'),
-        ],
+          if (!snapshot.hasData || snapshot.data!.isEmpty) {
+            // Fallback mock UI
+            return ListView(
+              padding: const EdgeInsets.all(24.0),
+              children: [
+                _buildCategoryHeader(context, 'Haircuts'),
+                const SizedBox(height: 16),
+                _buildServiceListItem(context, SalonService(id: 's1', name: 'Classic Haircut', category: 'Haircuts', durationMinutes: 45, price: 35, advanceRequired: 10, isActive: true)),
+                _buildServiceListItem(context, SalonService(id: 's2', name: 'Kids Haircut', category: 'Haircuts', durationMinutes: 30, price: 25, advanceRequired: 5, isActive: true)),
+              ],
+            );
+          }
+
+          final services = snapshot.data!;
+          // Group by category (simple mapping for UI)
+          final Map<String, List<SalonService>> categorizedServices = {};
+          for (var s in services) {
+            if (!categorizedServices.containsKey(s.category)) {
+              categorizedServices[s.category] = [];
+            }
+            categorizedServices[s.category]!.add(s);
+          }
+
+          return ListView(
+            padding: const EdgeInsets.all(24.0),
+            children: categorizedServices.entries.map((entry) {
+              return Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  _buildCategoryHeader(context, entry.key),
+                  const SizedBox(height: 16),
+                  ...entry.value.map((service) => _buildServiceListItem(context, service)),
+                  const SizedBox(height: 32),
+                ],
+              );
+            }).toList(),
+          );
+        },
       ),
     );
   }
@@ -44,7 +75,7 @@ class ServiceSelectionScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildServiceListItem(BuildContext context, String title, String duration, String price) {
+  Widget _buildServiceListItem(BuildContext context, SalonService service) {
     return Card(
       margin: const EdgeInsets.only(bottom: 16),
       child: Padding(
@@ -65,13 +96,13 @@ class ServiceSelectionScreen extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(title, style: Theme.of(context).textTheme.titleMedium),
+                  Text(service.name, style: Theme.of(context).textTheme.titleMedium),
                   const SizedBox(height: 4),
                   Row(
                     children: [
                       const Icon(Icons.schedule, size: 14, color: AppColors.textSecondary),
                       const SizedBox(width: 4),
-                      Text(duration, style: Theme.of(context).textTheme.bodyMedium),
+                      Text('${service.durationMinutes} mins', style: Theme.of(context).textTheme.bodyMedium),
                     ],
                   ),
                 ],
@@ -80,10 +111,12 @@ class ServiceSelectionScreen extends StatelessWidget {
             Column(
               crossAxisAlignment: CrossAxisAlignment.end,
               children: [
-                Text('\$$price', style: Theme.of(context).textTheme.titleLarge?.copyWith(color: AppColors.primary)),
+                Text('\$${service.price.toStringAsFixed(0)}', style: Theme.of(context).textTheme.titleLarge?.copyWith(color: AppColors.primary)),
                 const SizedBox(height: 8),
                 ElevatedButton(
                   onPressed: () {
+                    // Update Provider state
+                    context.read<BookingProvider>().selectService(service);
                     // Navigate to next step
                     Navigator.push(
                       context, 

@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import '../../../theme/app_colors.dart';
-import 'booking_summary_screen.dart'; // We'll create this next
+import '../../../providers/booking_provider.dart';
+import 'booking_summary_screen.dart';
 
 class TimeSelectionScreen extends StatefulWidget {
   const TimeSelectionScreen({super.key});
@@ -201,6 +203,12 @@ class _TimeSelectionScreenState extends State<TimeSelectionScreen> {
       ),
       child: ElevatedButton(
         onPressed: _selectedTime == null ? null : () {
+          // Construct the date correctly (using today + selected index as a mock)
+          final now = DateTime.now();
+          final bookingDate = DateTime(now.year, now.month, now.day + _selectedDateIndex);
+          
+          context.read<BookingProvider>().selectDateTime(bookingDate, _selectedTime!);
+
           Navigator.push(
             context, 
             MaterialPageRoute(builder: (_) => const BookingSummaryScreen())

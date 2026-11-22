@@ -1,9 +1,12 @@
 import 'package:flutter/material.dart';
 import '../../../theme/app_colors.dart';
-import '../home/customer_home_screen.dart'; // To route back to home
+import '../customer_main_screen.dart';
+import '../../../models/booking.dart';
 
 class BookingConfirmationScreen extends StatelessWidget {
-  const BookingConfirmationScreen({super.key});
+  final Booking booking;
+
+  const BookingConfirmationScreen({super.key, required this.booking});
 
   @override
   Widget build(BuildContext context) {
@@ -50,13 +53,13 @@ class BookingConfirmationScreen extends StatelessWidget {
                         ),
                         child: Column(
                           children: [
-                            _buildTicketRow('Booking ID', '#SC-8492'),
+                            _buildTicketRow('Booking ID', '#${booking.id}'),
                             const Padding(padding: EdgeInsets.symmetric(vertical: 12), child: Divider()),
-                            _buildTicketRow('Service', 'Classic Haircut'),
+                            _buildTicketRow('Service', booking.serviceName),
                             const Padding(padding: EdgeInsets.symmetric(vertical: 12), child: Divider()),
-                            _buildTicketRow('Date', 'Tue, 12 Nov 2024'),
+                            _buildTicketRow('Date', '${booking.appointmentDate.day}/${booking.appointmentDate.month}/${booking.appointmentDate.year}'),
                             const Padding(padding: EdgeInsets.symmetric(vertical: 12), child: Divider()),
-                            _buildTicketRow('Time', '09:45 AM'),
+                            _buildTicketRow('Time', booking.timeSlot),
                           ],
                         ),
                       )
@@ -71,7 +74,7 @@ class BookingConfirmationScreen extends StatelessWidget {
                 onPressed: () {
                   Navigator.pushAndRemoveUntil(
                     context, 
-                    MaterialPageRoute(builder: (_) => const CustomerHomeScreen()),
+                    MaterialPageRoute(builder: (_) => const CustomerMainScreen()),
                     (route) => false,
                   );
                 },

@@ -1,12 +1,26 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import '../../../theme/app_colors.dart';
-import 'payment_screen.dart'; // We'll create this next
+import '../../../providers/booking_provider.dart';
+import 'payment_screen.dart';
 
 class BookingSummaryScreen extends StatelessWidget {
   const BookingSummaryScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
+    final bookingProvider = context.watch<BookingProvider>();
+    final service = bookingProvider.selectedService;
+    final staff = bookingProvider.selectedStaffName;
+    final date = bookingProvider.selectedDate;
+    final time = bookingProvider.selectedTime;
+
+    if (service == null) {
+      return const Scaffold(body: Center(child: Text('Error: No service selected')));
+    }
+
+    final dateString = date != null ? "${date.day}/${date.month}/${date.year}" : "";
+
     return Scaffold(
       appBar: AppBar(
         title: const Text('Review Booking'),
@@ -25,11 +39,11 @@ class BookingSummaryScreen extends StatelessWidget {
                 _buildCard(
                   child: Column(
                     children: [
-                      _buildDetailRow('Service', 'Classic Haircut'),
+                      _buildDetailRow('Service', service.name),
                       const Divider(height: 24),
-                      _buildDetailRow('Duration', '45 mins'),
+                      _buildDetailRow('Duration', '${service.durationMinutes} mins'),
                       const Divider(height: 24),
-                      _buildDetailRow('Professional', 'Any Available'),
+                      _buildDetailRow('Professional', staff ?? 'Any Available'),
                     ],
                   ),
                 ),
@@ -39,9 +53,9 @@ class BookingSummaryScreen extends StatelessWidget {
                 _buildCard(
                   child: Column(
                     children: [
-                      _buildDetailRow('Date', 'Tue, 12 Nov 2024'),
+                      _buildDetailRow('Date', dateString),
                       const Divider(height: 24),
-                      _buildDetailRow('Time', '09:45 AM'),
+                      _buildDetailRow('Time', time ?? ''),
                     ],
                   ),
                 ),
@@ -79,13 +93,13 @@ class BookingSummaryScreen extends StatelessWidget {
                 _buildCard(
                   child: Column(
                     children: [
-                      _buildDetailRow('Service Total', '\$35.00'),
+                      _buildDetailRow('Service Total', '\$${service.price.toStringAsFixed(2)}'),
                       const Divider(height: 24),
-                      _buildDetailRow('Advance Required', '\$10.00', isBold: true, color: AppColors.primary),
+                      _buildDetailRow('Advance Required', '\$${service.advanceRequired.toStringAsFixed(2)}', isBold: true, color: AppColors.primary),
                       const SizedBox(height: 8),
-                      const Text(
-                        'An advance payment is required to confirm your booking. The remaining \$25.00 will be paid at the salon.',
-                        style: TextStyle(color: AppColors.textSecondary, fontSize: 12),
+                      Text(
+                        'An advance payment is required to confirm your booking. The remaining \$${(service.price - service.advanceRequired).toStringAsFixed(2)} will be paid at the salon.',
+                        style: const TextStyle(color: AppColors.textSecondary, fontSize: 12),
                       ),
                     ],
                   ),
@@ -93,7 +107,7 @@ class BookingSummaryScreen extends StatelessWidget {
               ],
             ),
           ),
-          _buildBottomBar(context),
+          _buildBottomBar(context, service.advanceRequired),
         ],
       ),
     );
@@ -135,7 +149,7 @@ class BookingSummaryScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildBottomBar(BuildContext context) {
+  Widget _buildBottomBar(BuildContext context, double advanceRequired) {
     return Container(
       padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
@@ -158,7 +172,7 @@ class BookingSummaryScreen extends StatelessWidget {
         style: ElevatedButton.styleFrom(
           minimumSize: const Size(double.infinity, 56),
         ),
-        child: const Text('Proceed to Pay \$10.00'),
+        child: Text('Proceed to Pay \$${advanceRequired.toStringAsFixed(2)}'),
       ),
     );
   }
