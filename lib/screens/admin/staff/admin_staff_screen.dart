@@ -168,28 +168,36 @@ class AdminStaffScreen extends StatelessWidget {
                 final rating = double.tryParse(ratingController.text) ?? 4.8;
                 final exp = int.tryParse(expController.text) ?? 3;
 
-                if (staff == null) {
-                  // Add new barber
-                  await FirestoreService().addStaff(Staff(
-                    id: '',
-                    name: name,
-                    role: role,
-                    rating: rating,
-                    experienceYears: exp,
-                    isActive: true,
-                  ));
-                } else {
-                  // Update existing barber
-                  await FirestoreService().updateStaff(staff.id, {
-                    'name': name,
-                    'role': role,
-                    'rating': rating,
-                    'experienceYears': exp,
-                  });
-                }
+                try {
+                  if (staff == null) {
+                    // Add new barber
+                    await FirestoreService().addStaff(Staff(
+                      id: '',
+                      name: name,
+                      role: role,
+                      rating: rating,
+                      experienceYears: exp,
+                      isActive: true,
+                    ));
+                  } else {
+                    // Update existing barber
+                    await FirestoreService().updateStaff(staff.id, {
+                      'name': name,
+                      'role': role,
+                      'rating': rating,
+                      'experienceYears': exp,
+                    });
+                  }
 
-                if (dialogContext.mounted) {
-                  Navigator.pop(dialogContext);
+                  if (dialogContext.mounted) {
+                    Navigator.pop(dialogContext);
+                  }
+                } catch (e) {
+                  if (dialogContext.mounted) {
+                    ScaffoldMessenger.of(dialogContext).showSnackBar(
+                      SnackBar(content: Text('Error saving barber: $e')),
+                    );
+                  }
                 }
               },
               child: Text(staff == null ? 'Add' : 'Save'),

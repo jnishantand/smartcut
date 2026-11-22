@@ -35,6 +35,13 @@ service cloud.firestore {
       allow write: if isAdmin();
     }
 
+    // Staff / Barbers Collection
+    match /staff/{staffId} {
+      // Anyone can read staff/barbers for booking, only admins can modify
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
     // Settings Collection (Salon Status)
     match /settings/{document=**} {
       allow read: if true;
