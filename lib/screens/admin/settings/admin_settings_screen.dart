@@ -4,6 +4,8 @@ import 'package:google_sign_in/google_sign_in.dart';
 import '../../../theme/app_colors.dart';
 import '../../auth/auth_wrapper.dart';
 import '../admin_notification_management_screen.dart';
+import '../services/admin_services_screen.dart';
+import '../staff/admin_staff_screen.dart';
 
 class AdminSettingsScreen extends StatelessWidget {
   const AdminSettingsScreen({super.key});
@@ -18,8 +20,12 @@ class AdminSettingsScreen extends StatelessWidget {
         padding: const EdgeInsets.all(24.0),
         children: [
           _buildSectionTitle(context, 'Salon Management'),
-          _buildSettingsTile(context, Icons.cut, 'Service Management', () {}),
-          _buildSettingsTile(context, Icons.people, 'Staff Management', () {}),
+          _buildSettingsTile(context, Icons.cut, 'Service Management', () {
+            Navigator.push(context, MaterialPageRoute(builder: (_) => const AdminServicesScreen()));
+          }),
+          _buildSettingsTile(context, Icons.people, 'Staff Management (Barbers)', () {
+            Navigator.push(context, MaterialPageRoute(builder: (_) => const AdminStaffScreen()));
+          }),
           _buildSettingsTile(context, Icons.business, 'Business Hours', () {}),
           
           const SizedBox(height: 24),
