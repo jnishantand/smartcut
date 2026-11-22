@@ -104,6 +104,21 @@ class FirestoreService {
             snapshot.docs.map((doc) => Booking.fromFirestore(doc)).toList());
   }
 
+  Stream<List<Booking>> getTodayConfirmedBookings() {
+    final now = DateTime.now();
+    final startOfDay = DateTime(now.year, now.month, now.day);
+    final endOfDay = DateTime(now.year, now.month, now.day, 23, 59, 59);
+
+    return _db
+        .collection('bookings')
+        .where('bookingStatus', isEqualTo: 'confirmed')
+        .where('appointmentDate', isGreaterThanOrEqualTo: startOfDay)
+        .where('appointmentDate', isLessThanOrEqualTo: endOfDay)
+        .snapshots()
+        .map((snapshot) =>
+            snapshot.docs.map((doc) => Booking.fromFirestore(doc)).toList());
+  }
+
   Future<void> updateBookingStatus(String bookingId, String status) async {
     await _db.collection('bookings').doc(bookingId).update({
       'bookingStatus': status,

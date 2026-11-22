@@ -110,64 +110,89 @@ class CustomerHomeScreen extends StatelessWidget {
         ),
         child: StreamBuilder<DocumentSnapshot>(
           stream: FirestoreService().getSalonStatus(),
-          builder: (context, snapshot) {
-            int currentCustomers = 0;
-            if (snapshot.hasData && snapshot.data!.exists) {
-              final data = snapshot.data!.data() as Map<String, dynamic>;
-              currentCustomers = data['currentCustomers'] ?? 0;
+          builder: (context, statusSnapshot) {
+            int manualCustomers = 0;
+            if (statusSnapshot.hasData && statusSnapshot.data!.exists) {
+              final data = statusSnapshot.data!.data() as Map<String, dynamic>;
+              manualCustomers = data['currentCustomers'] ?? 0;
             }
 
-            final status = currentCustomers > 5 
-                ? SalonStatus.busy 
-                : SalonStatus.available;
-            
-            final waitTime = currentCustomers > 5 ? '${(currentCustomers * 15)} min' : 'No Wait';
+            return StreamBuilder<List<Booking>>(
+              stream: FirestoreService().getTodayConfirmedBookings(),
+              builder: (context, bookingsSnapshot) {
+                final todayBookings = bookingsSnapshot.data ?? [];
+                final now = DateTime.now();
 
-            return Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                // Active bookings for today around current time
+                final activeBookings = todayBookings.where((b) {
+                  final diffMinutes = now.difference(b.appointmentDate).inMinutes;
+                  return diffMinutes <= 60 && b.appointmentDate.day == now.day;
+                }).toList();
+
+                // Total customers in salon = Active confirmed bookings + manual walk-ins
+                final int totalInSalon = activeBookings.length + manualCustomers;
+
+                String waitTime;
+                SalonStatus status;
+
+                if (totalInSalon == 0) {
+                  waitTime = 'No Wait';
+                  status = SalonStatus.available;
+                } else {
+                  // 4 chairs in salon, 30 min average service duration
+                  final int rounds = ((totalInSalon - 1) ~/ 4) + 1;
+                  final int estimatedMinutes = rounds * 30;
+                  waitTime = '$estimatedMinutes min';
+                  status = totalInSalon >= 4 ? SalonStatus.busy : SalonStatus.available;
+                }
+
+                return Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
-                      'Current Availability',
-                      style: Theme.of(context).textTheme.titleMedium,
-                    ),
-                    StatusBadge(status: status),
-                  ],
-                ),
-                const SizedBox(height: 16),
-                Row(
-                  children: [
-                    _buildStatusStat(context, 'In Salon', '$currentCustomers', Icons.people_outline),
-                    const SizedBox(width: 24),
-                    _buildStatusStat(context, 'Est. Wait', waitTime, Icons.timer_outlined),
-                  ],
-                ),
-                const SizedBox(height: 16),
-                Container(
-                  padding: const EdgeInsets.all(12),
-                  decoration: BoxDecoration(
-                    color: AppColors.secondary.withOpacity(0.5),
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: Row(
-                    children: [
-                      const Icon(Icons.info_outline, size: 16, color: AppColors.primary),
-                      const SizedBox(width: 8),
-                      Expanded(
-                        child: Text(
-                          'Waiting times are estimates and may vary.',
-                          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                            color: AppColors.primary,
-                            fontSize: 12,
-                          ),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(
+                          'Current Availability',
+                          style: Theme.of(context).textTheme.titleMedium,
                         ),
+                        StatusBadge(status: status),
+                      ],
+                    ),
+                    const SizedBox(height: 16),
+                    Row(
+                      children: [
+                        _buildStatusStat(context, 'In Salon', '$totalInSalon', Icons.people_outline),
+                        const SizedBox(width: 24),
+                        _buildStatusStat(context, 'Est. Wait', waitTime, Icons.timer_outlined),
+                      ],
+                    ),
+                    const SizedBox(height: 16),
+                    Container(
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        color: AppColors.secondary.withOpacity(0.5),
+                        borderRadius: BorderRadius.circular(12),
                       ),
-                    ],
-                  ),
-                ),
-              ],
+                      child: Row(
+                        children: [
+                          const Icon(Icons.info_outline, size: 16, color: AppColors.primary),
+                          const SizedBox(width: 8),
+                          Expanded(
+                            child: Text(
+                              'Calculated from 4 active salon chairs (30m avg service).',
+                              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                                color: AppColors.primary,
+                                fontSize: 12,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                );
+              },
             );
           }
         ),

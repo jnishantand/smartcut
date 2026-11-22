@@ -89,65 +89,89 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
         ),
         child: StreamBuilder<DocumentSnapshot>(
           stream: FirestoreService().getSalonStatus(),
-          builder: (context, snapshot) {
-            int currentCustomers = _currentCustomers; // default local
-            if (snapshot.hasData && snapshot.data!.exists) {
-              final data = snapshot.data!.data() as Map<String, dynamic>;
-              currentCustomers = data['currentCustomers'] ?? 0;
-              // Sync local state quietly
-              WidgetsBinding.instance.addPostFrameCallback((_) {
-                if (mounted && _currentCustomers != currentCustomers) {
-                  setState(() => _currentCustomers = currentCustomers);
-                }
-              });
+          builder: (context, statusSnapshot) {
+            int manualOffset = 0;
+            if (statusSnapshot.hasData && statusSnapshot.data!.exists) {
+              final data = statusSnapshot.data!.data() as Map<String, dynamic>;
+              manualOffset = data['currentCustomers'] ?? 0;
             }
-            
-            final isBusy = currentCustomers > 5;
 
-            return Column(
-              children: [
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            return StreamBuilder<List<Booking>>(
+              stream: FirestoreService().getTodayConfirmedBookings(),
+              builder: (context, bookingsSnapshot) {
+                final todayBookings = bookingsSnapshot.data ?? [];
+                final now = DateTime.now();
+
+                final activeBookings = todayBookings.where((b) {
+                  final diffMinutes = now.difference(b.appointmentDate).inMinutes;
+                  return diffMinutes <= 60 && b.appointmentDate.day == now.day;
+                }).toList();
+
+                final int currentCustomers = activeBookings.length + manualOffset;
+                final isBusy = currentCustomers >= 4;
+
+                return Column(
                   children: [
-                    Text(
-                      'Live Salon Status',
-                      style: Theme.of(context).textTheme.titleMedium?.copyWith(color: Colors.white),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(
+                          'Live Salon Status',
+                          style: Theme.of(context).textTheme.titleMedium?.copyWith(color: Colors.white),
+                        ),
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                          decoration: BoxDecoration(
+                            color: isBusy ? AppColors.error : AppColors.success,
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: Text(isBusy ? 'Busy' : 'Available', style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+                        )
+                      ],
                     ),
-                    Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                      decoration: BoxDecoration(
-                        color: isBusy ? AppColors.error : AppColors.success,
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: Text(isBusy ? 'Busy' : 'Available', style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
-                    )
-                  ],
-                ),
-                const SizedBox(height: 24),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceAround,
-                  children: [
-                    _buildLiveCounter('In Salon', currentCustomers.toString()),
-                    Container(width: 1, height: 40, color: Colors.white.withOpacity(0.3)),
-                    _buildLiveCounter('Waiting', currentCustomers > 3 ? '${currentCustomers - 3}' : '0'),
-                    Container(width: 1, height: 40, color: Colors.white.withOpacity(0.3)),
-                    _buildLiveCounter('Serving', currentCustomers > 3 ? '3' : '$currentCustomers'),
-                  ],
-                ),
-                const SizedBox(height: 24),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    IconButton(
-                      onPressed: () {
-                        if (_currentCustomers > 0) {
-                          FirestoreService().updateSalonCustomerCount(_currentCustomers - 1);
-                        }
-                      },
-                      icon: const Icon(Icons.remove_circle_outline, color: Colors.white, size: 32),
+                    const SizedBox(height: 24),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceAround,
+                      children: [
+                        _buildLiveCounter('In Salon', '$currentCustomers'),
+                        Container(width: 1, height: 40, color: Colors.white.withOpacity(0.3)),
+                        _buildLiveCounter('Waiting', currentCustomers > 4 ? '${currentCustomers - 4}' : '0'),
+                        Container(width: 1, height: 40, color: Colors.white.withOpacity(0.3)),
+                        _buildLiveCounter('Serving', currentCustomers > 4 ? '4' : '$currentCustomers'),
+                      ],
                     ),
-                    const SizedBox(width: 16),
-                    const Text(
+                    const SizedBox(height: 24),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        IconButton(
+                          onPressed: () {
+                            if (manualOffset > 0) {
+                              FirestoreService().updateSalonCustomerCount(manualOffset - 1);
+                            }
+                          },
+                          icon: const Icon(Icons.remove_circle_outline, color: Colors.white, size: 32),
+                        ),
+                        const SizedBox(width: 16),
+                        Text(
+                          'Walk-In Adj: $manualOffset',
+                          style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+                        ),
+                        const SizedBox(width: 16),
+                        IconButton(
+                          onPressed: () {
+                            FirestoreService().updateSalonCustomerCount(manualOffset + 1);
+                          },
+                          icon: const Icon(Icons.add_circle_outline, color: Colors.white, size: 32),
+                        ),
+                      ],
+                    ),
+                  ],
+                );
+              },
+            );
+          },
+        ),
                       'Update Count',
                       style: TextStyle(color: Colors.white, fontSize: 16),
                     ),
