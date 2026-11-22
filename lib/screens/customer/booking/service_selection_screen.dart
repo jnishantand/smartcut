@@ -26,40 +26,18 @@ class ServiceSelectionScreen extends StatelessWidget {
             return const Center(child: CircularProgressIndicator());
           }
           
-          if (!snapshot.hasData || snapshot.data!.isEmpty) {
-            // Empty state with a button to populate real Firestore services
-            return Center(
-              child: Padding(
-                padding: const EdgeInsets.all(32.0),
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    const Icon(Icons.storefront, size: 64, color: AppColors.textSecondary),
-                    const SizedBox(height: 16),
-                    Text(
-                      'No services found in database',
-                      style: Theme.of(context).textTheme.titleLarge,
-                      textAlign: TextAlign.center,
-                    ),
-                    const SizedBox(height: 8),
-                    const Text(
-                      'Tap below to add default salon services to Firestore.',
-                      textAlign: TextAlign.center,
-                      style: TextStyle(color: AppColors.textSecondary),
-                    ),
-                    const SizedBox(height: 24),
-                    ElevatedButton.icon(
-                      onPressed: () => FirestoreService().seedSampleServices(),
-                      icon: const Icon(Icons.add),
-                      label: const Text('Add Services to Database'),
-                    ),
-                  ],
-                ),
-              ),
-            );
-          }
+          final List<SalonService> defaultServices = [
+            SalonService(id: 's1', name: "Men's Classic Haircut", category: 'Haircuts', durationMinutes: 45, price: 250, advanceRequired: 50, isActive: true),
+            SalonService(id: 's2', name: 'Skin Fade Haircut', category: 'Haircuts', durationMinutes: 60, price: 350, advanceRequired: 100, isActive: true),
+            SalonService(id: 's3', name: 'Kids Haircut', category: 'Haircuts', durationMinutes: 30, price: 150, advanceRequired: 50, isActive: true),
+            SalonService(id: 's4', name: 'Beard Trim & Styling', category: 'Beard & Grooming', durationMinutes: 30, price: 150, advanceRequired: 50, isActive: true),
+            SalonService(id: 's5', name: 'Hot Towel Shave', category: 'Beard & Grooming', durationMinutes: 45, price: 250, advanceRequired: 50, isActive: true),
+            SalonService(id: 's6', name: 'Full Royal Grooming', category: 'Beard & Grooming', durationMinutes: 75, price: 600, advanceRequired: 150, isActive: true),
+          ];
 
-          final services = snapshot.data!;
+          final services = (snapshot.hasData && snapshot.data!.isNotEmpty)
+              ? snapshot.data!
+              : defaultServices;
           // Group by category (simple mapping for UI)
           final Map<String, List<SalonService>> categorizedServices = {};
           for (var s in services) {

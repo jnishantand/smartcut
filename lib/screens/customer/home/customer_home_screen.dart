@@ -217,6 +217,13 @@ class CustomerHomeScreen extends StatelessWidget {
   }
 
   Widget _buildPopularServices(BuildContext context) {
+    final List<SalonService> defaultServices = [
+      SalonService(id: 's1', name: "Men's Classic Haircut", category: 'Haircuts', durationMinutes: 45, price: 250, advanceRequired: 50, isActive: true),
+      SalonService(id: 's2', name: 'Kids Haircut', category: 'Haircuts', durationMinutes: 30, price: 150, advanceRequired: 50, isActive: true),
+      SalonService(id: 's3', name: 'Beard Trim & Styling', category: 'Beard & Grooming', durationMinutes: 30, price: 150, advanceRequired: 50, isActive: true),
+      SalonService(id: 's4', name: 'Skin Fade Haircut', category: 'Haircuts', durationMinutes: 60, price: 350, advanceRequired: 100, isActive: true),
+    ];
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -244,20 +251,10 @@ class CustomerHomeScreen extends StatelessWidget {
           child: StreamBuilder<List<SalonService>>(
             stream: FirestoreService().getActiveServices(),
             builder: (context, snapshot) {
-              if (snapshot.connectionState == ConnectionState.waiting) {
-                return const Center(child: CircularProgressIndicator());
-              }
-              if (!snapshot.hasData || snapshot.data!.isEmpty) {
-                return Center(
-                  child: TextButton.icon(
-                    onPressed: () => FirestoreService().seedSampleServices(),
-                    icon: const Icon(Icons.add_circle_outline),
-                    label: const Text('Add Services to Database'),
-                  ),
-                );
-              }
+              final services = (snapshot.hasData && snapshot.data!.isNotEmpty)
+                  ? snapshot.data!
+                  : defaultServices;
 
-              final services = snapshot.data!;
               return ListView.builder(
                 padding: const EdgeInsets.symmetric(horizontal: 24.0),
                 scrollDirection: Axis.horizontal,
