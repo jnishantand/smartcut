@@ -90,7 +90,14 @@ class _SignUpScreenState extends State<SignUpScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Icon(Icons.person_outline, size: 48, color: AppColors.primary),
+              ClipRRect(
+                borderRadius: BorderRadius.circular(16),
+                child: Image.asset(
+                  'assets/images/app_icon.png',
+                  width: 64,
+                  height: 64,
+                ),
+              ),
                 const SizedBox(height: 24),
                 Text(
                   'Just one more step',

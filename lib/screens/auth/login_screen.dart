@@ -106,7 +106,14 @@ class _LoginScreenState extends State<LoginScreen> {
             crossAxisAlignment: CrossAxisAlignment.start,
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              const Icon(Icons.content_cut, size: 48, color: AppColors.primary),
+              ClipRRect(
+                borderRadius: BorderRadius.circular(20),
+                child: Image.asset(
+                  'assets/images/app_icon.png',
+                  width: 80,
+                  height: 80,
+                ),
+              ),
               const SizedBox(height: 24),
               Text(
                 'Welcome to SmartCut',
