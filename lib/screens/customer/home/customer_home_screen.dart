@@ -58,9 +58,22 @@ class CustomerHomeScreen extends StatelessWidget {
                     ),
                   ),
                   const SizedBox(height: 4),
-                  Text(
-                    'Smart Salon & Spa',
-                    style: Theme.of(context).textTheme.displayMedium,
+                  Row(
+                    children: [
+                      ClipRRect(
+                        borderRadius: BorderRadius.circular(6),
+                        child: Image.asset(
+                          'assets/images/app_icon.png',
+                          width: 24,
+                          height: 24,
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      Text(
+                        'Smart Salon & Spa',
+                        style: Theme.of(context).textTheme.displayMedium?.copyWith(fontSize: 22),
+                      ),
+                    ],
                   ),
                 ],
               ),

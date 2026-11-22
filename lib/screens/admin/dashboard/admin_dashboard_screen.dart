@@ -57,10 +57,14 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
               ),
             ],
           ),
-          const CircleAvatar(
-            radius: 24,
-            backgroundColor: AppColors.primary,
-            child: Icon(Icons.storefront, color: Colors.white),
+          ClipRRect(
+            borderRadius: BorderRadius.circular(12),
+            child: Image.asset(
+              'assets/images/app_icon.png',
+              width: 48,
+              height: 48,
+              fit: BoxFit.cover,
+            ),
           ),
         ],
       ),
