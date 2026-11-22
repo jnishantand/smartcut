@@ -6,6 +6,7 @@ import '../../auth/auth_wrapper.dart';
 import '../admin_notification_management_screen.dart';
 import '../services/admin_services_screen.dart';
 import '../staff/admin_staff_screen.dart';
+import 'admin_business_hours_screen.dart';
 
 class AdminSettingsScreen extends StatelessWidget {
   const AdminSettingsScreen({super.key});
@@ -26,7 +27,9 @@ class AdminSettingsScreen extends StatelessWidget {
           _buildSettingsTile(context, Icons.people, 'Staff Management (Barbers)', () {
             Navigator.push(context, MaterialPageRoute(builder: (_) => const AdminStaffScreen()));
           }),
-          _buildSettingsTile(context, Icons.business, 'Business Hours', () {}),
+          _buildSettingsTile(context, Icons.business, 'Business Hours & Time Slots', () {
+            Navigator.push(context, MaterialPageRoute(builder: (_) => const AdminBusinessHoursScreen()));
+          }),
           
           const SizedBox(height: 24),
           _buildSectionTitle(context, 'Operations & Rules'),

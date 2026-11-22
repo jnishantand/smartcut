@@ -4,6 +4,7 @@ import 'package:intl/intl.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../../../theme/app_colors.dart';
 import '../../../providers/booking_provider.dart';
+import '../../../services/firestore_service.dart';
 import 'booking_summary_screen.dart';
 
 class TimeSelectionScreen extends StatefulWidget {
@@ -17,9 +18,9 @@ class _TimeSelectionScreenState extends State<TimeSelectionScreen> {
   int _selectedDateIndex = 0;
   String? _selectedTime;
 
-  final List<String> _morningSlots = ['09:00 AM', '09:45 AM', '10:30 AM', '11:15 AM'];
-  final List<String> _afternoonSlots = ['12:00 PM', '12:45 PM', '01:30 PM', '02:15 PM', '03:00 PM', '03:45 PM'];
-  final List<String> _eveningSlots = ['04:30 PM', '05:15 PM', '06:00 PM', '06:45 PM', '07:30 PM', '08:15 PM'];
+  final List<String> _defaultMorningSlots = ['09:00 AM', '09:45 AM', '10:30 AM', '11:15 AM'];
+  final List<String> _defaultAfternoonSlots = ['12:00 PM', '12:45 PM', '01:30 PM', '02:15 PM', '03:00 PM', '03:45 PM'];
+  final List<String> _defaultEveningSlots = ['04:30 PM', '05:15 PM', '06:00 PM', '06:45 PM', '07:30 PM', '08:15 PM'];
 
   DateTime get _selectedDate {
     final now = DateTime.now();
@@ -41,83 +42,114 @@ class _TimeSelectionScreenState extends State<TimeSelectionScreen> {
           onPressed: () => Navigator.pop(context),
         ),
       ),
-      body: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          _buildDateSelector(),
-          Expanded(
-            child: StreamBuilder<QuerySnapshot>(
-              stream: FirebaseFirestore.instance
-                  .collection('bookings')
-                  .where('bookingStatus', isEqualTo: 'confirmed')
-                  .where('appointmentDate', isGreaterThanOrEqualTo: startOfDay)
-                  .where('appointmentDate', isLessThanOrEqualTo: endOfDay)
-                  .snapshots(),
-              builder: (context, snapshot) {
-                // Count bookings per slot
-                final Map<String, int> slotBookingCounts = {};
-                if (snapshot.hasData) {
-                  for (var doc in snapshot.data!.docs) {
-                    final data = doc.data() as Map<String, dynamic>;
-                    final slot = data['timeSlot'] as String?;
-                    if (slot != null) {
-                      slotBookingCounts[slot] = (slotBookingCounts[slot] ?? 0) + 1;
+      body: StreamBuilder<DocumentSnapshot>(
+        stream: FirestoreService().getBusinessHours(),
+        builder: (context, hoursSnapshot) {
+          List<String> morningSlots = _defaultMorningSlots;
+          List<String> afternoonSlots = _defaultAfternoonSlots;
+          List<String> eveningSlots = _defaultEveningSlots;
+          Set<String> adminDisabledSlots = {};
+
+          if (hoursSnapshot.hasData && hoursSnapshot.data!.exists) {
+            final data = hoursSnapshot.data!.data() as Map<String, dynamic>;
+            if (data['morningSlots'] != null) {
+              morningSlots = List<String>.from(data['morningSlots']);
+            }
+            if (data['afternoonSlots'] != null) {
+              afternoonSlots = List<String>.from(data['afternoonSlots']);
+            }
+            if (data['eveningSlots'] != null) {
+              eveningSlots = List<String>.from(data['eveningSlots']);
+            }
+            if (data['disabledSlots'] != null) {
+              adminDisabledSlots = Set<String>.from(data['disabledSlots']);
+            }
+          }
+
+          return Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              _buildDateSelector(),
+              Expanded(
+                child: StreamBuilder<QuerySnapshot>(
+                  stream: FirebaseFirestore.instance
+                      .collection('bookings')
+                      .where('bookingStatus', isEqualTo: 'confirmed')
+                      .where('appointmentDate', isGreaterThanOrEqualTo: startOfDay)
+                      .where('appointmentDate', isLessThanOrEqualTo: endOfDay)
+                      .snapshots(),
+                  builder: (context, snapshot) {
+                    final Map<String, int> slotBookingCounts = {};
+                    if (snapshot.hasData) {
+                      for (var doc in snapshot.data!.docs) {
+                        final data = doc.data() as Map<String, dynamic>;
+                        final slot = data['timeSlot'] as String?;
+                        if (slot != null) {
+                          slotBookingCounts[slot] = (slotBookingCounts[slot] ?? 0) + 1;
+                        }
+                      }
                     }
-                  }
-                }
 
-                // A slot is fully booked if 4 bookings exist for that slot (4 chairs)
-                final Set<String> fullyBookedSlots = {};
-                slotBookingCounts.forEach((slot, count) {
-                  if (count >= 4) {
-                    fullyBookedSlots.add(slot);
-                  }
-                });
+                    // A slot is unavailable if fully booked (4 chairs) OR disabled by Admin
+                    final Set<String> unavailableSlots = Set.from(adminDisabledSlots);
+                    slotBookingCounts.forEach((slot, count) {
+                      if (count >= 4) {
+                        unavailableSlots.add(slot);
+                      }
+                    });
 
-                return ListView(
-                  padding: const EdgeInsets.all(24.0),
-                  children: [
-                    Container(
-                      padding: const EdgeInsets.all(12),
-                      decoration: BoxDecoration(
-                        color: AppColors.secondary.withOpacity(0.5),
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      child: Row(
-                        children: [
-                          const Icon(Icons.info_outline, color: AppColors.primary, size: 20),
-                          const SizedBox(width: 8),
-                          Expanded(
-                            child: Text(
-                              'Showing real-time availability for ${DateFormat('EEE, dd MMM').format(selectedDate)}.',
-                              style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: AppColors.primary),
-                            ),
+                    return ListView(
+                      padding: const EdgeInsets.all(24.0),
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.all(12),
+                          decoration: BoxDecoration(
+                            color: AppColors.secondary.withOpacity(0.5),
+                            borderRadius: BorderRadius.circular(8),
                           ),
+                          child: Row(
+                            children: [
+                              const Icon(Icons.info_outline, color: AppColors.primary, size: 20),
+                              const SizedBox(width: 8),
+                              Expanded(
+                                child: Text(
+                                  'Showing real-time availability for ${DateFormat('EEE, dd MMM').format(selectedDate)}.',
+                                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: AppColors.primary),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        const SizedBox(height: 32),
+
+                        if (morningSlots.isNotEmpty) ...[
+                          Text('Morning', style: Theme.of(context).textTheme.titleMedium),
+                          const SizedBox(height: 16),
+                          _buildTimeGrid(morningSlots, unavailableSlots, selectedDate),
+                          const SizedBox(height: 32),
                         ],
-                      ),
-                    ),
-                    const SizedBox(height: 32),
 
-                    Text('Morning', style: Theme.of(context).textTheme.titleMedium),
-                    const SizedBox(height: 16),
-                    _buildTimeGrid(_morningSlots, fullyBookedSlots, selectedDate),
+                        if (afternoonSlots.isNotEmpty) ...[
+                          Text('Afternoon', style: Theme.of(context).textTheme.titleMedium),
+                          const SizedBox(height: 16),
+                          _buildTimeGrid(afternoonSlots, unavailableSlots, selectedDate),
+                          const SizedBox(height: 32),
+                        ],
 
-                    const SizedBox(height: 32),
-                    Text('Afternoon', style: Theme.of(context).textTheme.titleMedium),
-                    const SizedBox(height: 16),
-                    _buildTimeGrid(_afternoonSlots, fullyBookedSlots, selectedDate),
-
-                    const SizedBox(height: 32),
-                    Text('Evening', style: Theme.of(context).textTheme.titleMedium),
-                    const SizedBox(height: 16),
-                    _buildTimeGrid(_eveningSlots, fullyBookedSlots, selectedDate),
-                  ],
-                );
-              },
-            ),
-          ),
-          _buildBottomBar(),
-        ],
+                        if (eveningSlots.isNotEmpty) ...[
+                          Text('Evening', style: Theme.of(context).textTheme.titleMedium),
+                          const SizedBox(height: 16),
+                          _buildTimeGrid(eveningSlots, unavailableSlots, selectedDate),
+                        ],
+                      ],
+                    );
+                  },
+                ),
+              ),
+              _buildBottomBar(),
+            ],
+          );
+        },
       ),
     );
   }
@@ -186,7 +218,7 @@ class _TimeSelectionScreenState extends State<TimeSelectionScreen> {
     );
   }
 
-  Widget _buildTimeGrid(List<String> slots, Set<String> fullyBookedSlots, DateTime selectedDate) {
+  Widget _buildTimeGrid(List<String> slots, Set<String> unavailableSlots, DateTime selectedDate) {
     final now = DateTime.now();
     final isToday = selectedDate.year == now.year &&
         selectedDate.month == now.month &&
@@ -204,7 +236,7 @@ class _TimeSelectionScreenState extends State<TimeSelectionScreen> {
       itemCount: slots.length,
       itemBuilder: (context, index) {
         final timeStr = slots[index];
-        bool isUnavailable = fullyBookedSlots.contains(timeStr);
+        bool isUnavailable = unavailableSlots.contains(timeStr);
 
         // If today, check if time slot is already past
         if (isToday) {

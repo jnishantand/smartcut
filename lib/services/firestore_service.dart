@@ -80,6 +80,16 @@ class FirestoreService {
     await batch.commit();
   }
 
+  // --- Business Hours & Time Slots ---
+  Stream<DocumentSnapshot> getBusinessHours() {
+    return _db.collection('settings').doc('business_hours').snapshots();
+  }
+
+  Future<void> updateBusinessHours(Map<String, dynamic> data) async {
+    await _db.collection('settings').doc('business_hours').set(
+        data, SetOptions(merge: true));
+  }
+
   // --- Bookings ---
   Future<void> createBooking(Booking booking) async {
     await _db.collection('bookings').add(booking.toMap());
@@ -194,5 +204,15 @@ class FirestoreService {
     });
 
     await batch.commit();
+  }
+
+  // --- Business Hours & Time Slots ---
+  Stream<DocumentSnapshot> getBusinessHours() {
+    return _db.collection('settings').doc('business_hours').snapshots();
+  }
+
+  Future<void> updateBusinessHours(Map<String, dynamic> data) async {
+    await _db.collection('settings').doc('business_hours').set(
+        data, SetOptions(merge: true));
   }
 }
