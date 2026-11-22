@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import '../../../theme/app_colors.dart';
 import '../../../widgets/status_badge.dart';
+import '../../../services/firestore_service.dart';
 
 class AdminDashboardScreen extends StatefulWidget {
   const AdminDashboardScreen({super.key});
@@ -80,57 +82,82 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
             ),
           ],
         ),
-        child: Column(
-          children: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        child: StreamBuilder<DocumentSnapshot>(
+          stream: FirestoreService().getSalonStatus(),
+          builder: (context, snapshot) {
+            int currentCustomers = _currentCustomers; // default local
+            if (snapshot.hasData && snapshot.data!.exists) {
+              final data = snapshot.data!.data() as Map<String, dynamic>;
+              currentCustomers = data['currentCustomers'] ?? 0;
+              // Sync local state quietly
+              WidgetsBinding.instance.addPostFrameCallback((_) {
+                if (mounted && _currentCustomers != currentCustomers) {
+                  setState(() => _currentCustomers = currentCustomers);
+                }
+              });
+            }
+            
+            final isBusy = currentCustomers > 5;
+
+            return Column(
               children: [
-                Text(
-                  'Live Salon Status',
-                  style: Theme.of(context).textTheme.titleMedium?.copyWith(color: Colors.white),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(
+                      'Live Salon Status',
+                      style: Theme.of(context).textTheme.titleMedium?.copyWith(color: Colors.white),
+                    ),
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                      decoration: BoxDecoration(
+                        color: isBusy ? AppColors.error : AppColors.success,
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: Text(isBusy ? 'Busy' : 'Available', style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+                    )
+                  ],
                 ),
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                  decoration: BoxDecoration(
-                    color: Colors.white.withOpacity(0.2),
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: const Text('Busy', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+                const SizedBox(height: 24),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceAround,
+                  children: [
+                    _buildLiveCounter('In Salon', currentCustomers.toString()),
+                    Container(width: 1, height: 40, color: Colors.white.withOpacity(0.3)),
+                    _buildLiveCounter('Waiting', currentCustomers > 3 ? '${currentCustomers - 3}' : '0'),
+                    Container(width: 1, height: 40, color: Colors.white.withOpacity(0.3)),
+                    _buildLiveCounter('Serving', currentCustomers > 3 ? '3' : '$currentCustomers'),
+                  ],
+                ),
+                const SizedBox(height: 24),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    IconButton(
+                      onPressed: () {
+                        if (_currentCustomers > 0) {
+                          FirestoreService().updateSalonCustomerCount(_currentCustomers - 1);
+                        }
+                      },
+                      icon: const Icon(Icons.remove_circle_outline, color: Colors.white, size: 32),
+                    ),
+                    const SizedBox(width: 16),
+                    const Text(
+                      'Update Count',
+                      style: TextStyle(color: Colors.white, fontSize: 16),
+                    ),
+                    const SizedBox(width: 16),
+                    IconButton(
+                      onPressed: () {
+                        FirestoreService().updateSalonCustomerCount(_currentCustomers + 1);
+                      },
+                      icon: const Icon(Icons.add_circle_outline, color: Colors.white, size: 32),
+                    ),
+                  ],
                 )
               ],
-            ),
-            const SizedBox(height: 24),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceAround,
-              children: [
-                _buildLiveCounter('In Salon', _currentCustomers.toString()),
-                Container(width: 1, height: 40, color: Colors.white.withOpacity(0.3)),
-                _buildLiveCounter('Waiting', '2'),
-                Container(width: 1, height: 40, color: Colors.white.withOpacity(0.3)),
-                _buildLiveCounter('Serving', '3'),
-              ],
-            ),
-            const SizedBox(height: 24),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                IconButton(
-                  onPressed: () => setState(() { if(_currentCustomers > 0) _currentCustomers--; }),
-                  icon: const Icon(Icons.remove_circle_outline, color: Colors.white, size: 32),
-                ),
-                const SizedBox(width: 16),
-                const Text(
-                  'Update Count',
-                  style: TextStyle(color: Colors.white, fontSize: 16),
-                ),
-                const SizedBox(width: 16),
-                IconButton(
-                  onPressed: () => setState(() { _currentCustomers++; }),
-                  icon: const Icon(Icons.add_circle_outline, color: Colors.white, size: 32),
-                ),
-              ],
-            )
-          ],
+            );
+          }
         ),
       ),
     );
