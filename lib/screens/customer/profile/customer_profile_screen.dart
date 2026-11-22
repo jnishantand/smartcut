@@ -5,6 +5,9 @@ import 'package:provider/provider.dart';
 import '../../../theme/app_colors.dart';
 import '../../../providers/user_provider.dart';
 import '../../notifications/notification_preferences_screen.dart';
+import 'payment_history_screen.dart';
+import 'faq_screen.dart';
+import 'about_screen.dart';
 import '../../auth/login_screen.dart';
 
 class CustomerProfileScreen extends StatelessWidget {
@@ -84,7 +87,12 @@ class CustomerProfileScreen extends StatelessWidget {
           context: context,
           icon: Icons.payment,
           title: 'Payment History',
-          onTap: () {},
+          onTap: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(builder: (_) => const PaymentHistoryScreen()),
+            );
+          },
         ),
         _buildListTile(
           context: context,
@@ -104,13 +112,23 @@ class CustomerProfileScreen extends StatelessWidget {
           context: context,
           icon: Icons.help_outline,
           title: 'Help & FAQ',
-          onTap: () {},
+          onTap: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(builder: (_) => const FaqScreen()),
+            );
+          },
         ),
         _buildListTile(
           context: context,
           icon: Icons.info_outline,
           title: 'About SmartCut',
-          onTap: () {},
+          onTap: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(builder: (_) => const AboutScreen()),
+            );
+          },
         ),
         const SizedBox(height: 24),
         _buildListTile(
