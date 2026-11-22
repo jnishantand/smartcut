@@ -133,11 +133,11 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceAround,
                       children: [
-                        _buildLiveCounter('In Salon', '$currentCustomers'),
+                        _buildLiveCounter(context, 'In Salon', '$currentCustomers'),
                         Container(width: 1, height: 40, color: Colors.white.withOpacity(0.3)),
-                        _buildLiveCounter('Waiting', currentCustomers > 4 ? '${currentCustomers - 4}' : '0'),
+                        _buildLiveCounter(context, 'Waiting', currentCustomers > 4 ? '${currentCustomers - 4}' : '0'),
                         Container(width: 1, height: 40, color: Colors.white.withOpacity(0.3)),
-                        _buildLiveCounter('Serving', currentCustomers > 4 ? '4' : '$currentCustomers'),
+                        _buildLiveCounter(context, 'Serving', currentCustomers > 4 ? '4' : '$currentCustomers'),
                       ],
                     ),
                     const SizedBox(height: 24),
@@ -172,27 +172,11 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
             );
           },
         ),
-                      'Update Count',
-                      style: TextStyle(color: Colors.white, fontSize: 16),
-                    ),
-                    const SizedBox(width: 16),
-                    IconButton(
-                      onPressed: () {
-                        FirestoreService().updateSalonCustomerCount(_currentCustomers + 1);
-                      },
-                      icon: const Icon(Icons.add_circle_outline, color: Colors.white, size: 32),
-                    ),
-                  ],
-                )
-              ],
-            );
-          }
-        ),
       ),
     );
   }
 
-  Widget _buildLiveCounter(String label, String value) {
+  Widget _buildLiveCounter(BuildContext context, String label, String value) {
     return Column(
       children: [
         Text(
