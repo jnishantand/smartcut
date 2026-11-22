@@ -69,7 +69,7 @@ class NotificationService {
     );
 
     await _localNotificationsPlugin.initialize(
-      initializationSettings,
+      settings: initializationSettings,
       onDidReceiveNotificationResponse: (response) {
         log("Notification tapped: ${response.payload}");
       },
@@ -147,10 +147,10 @@ class NotificationService {
     );
 
     await _localNotificationsPlugin.show(
-      DateTime.now().millisecondsSinceEpoch ~/ 1000,
-      title,
-      body,
-      platformDetails,
+      id: DateTime.now().millisecondsSinceEpoch ~/ 1000,
+      title: title,
+      body: body,
+      notificationDetails: platformDetails,
     );
   }
 
