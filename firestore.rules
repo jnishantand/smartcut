@@ -21,8 +21,8 @@ service cloud.firestore {
 
     // Notifications Collection
     match /notifications/{notificationId} {
-      // Users can only read their own notifications; Admins can manage all.
-      allow read: if isAuthenticated() && (resource.data.userId == request.auth.uid || isAdmin());
+      // Users can read their own notifications or broadcast notifications ('all'); Admins can manage all.
+      allow read: if isAuthenticated() && (resource.data.userId == request.auth.uid || resource.data.userId == 'all' || isAdmin());
       // Only backend or Admins should create notifications directly
       allow create: if isAdmin();
       allow update, delete: if isAdmin();
