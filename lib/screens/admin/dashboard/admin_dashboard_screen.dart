@@ -1,9 +1,11 @@
-import 'package:flutter/material.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
 import '../../../theme/app_colors.dart';
 import '../../../widgets/status_badge.dart';
 import '../../../services/firestore_service.dart';
 import '../../../models/booking.dart';
+import '../staff/admin_staff_screen.dart';
+import '../services/admin_services_screen.dart';
+import '../admin_notification_management_screen.dart';
+import '../settings/admin_settings_screen.dart';
 
 class AdminDashboardScreen extends StatefulWidget {
   const AdminDashboardScreen({super.key});
@@ -198,15 +200,47 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text('Quick Actions', style: Theme.of(context).textTheme.titleLarge),
+          Text('Quick Management', style: Theme.of(context).textTheme.titleLarge),
           const SizedBox(height: 16),
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              _buildActionBtn(context, Icons.person_add_alt_1, 'Walk-in', AppColors.primary),
-              _buildActionBtn(context, Icons.access_time, 'Wait Time', AppColors.warning),
-              _buildActionBtn(context, Icons.campaign, 'Offer', AppColors.success),
-              _buildActionBtn(context, Icons.qr_code_scanner, 'Scan', AppColors.textPrimary),
+              _buildActionBtn(
+                context, 
+                Icons.content_cut, 
+                'Services', 
+                AppColors.primary,
+                onTap: () {
+                  Navigator.push(context, MaterialPageRoute(builder: (_) => const AdminServicesScreen()));
+                },
+              ),
+              _buildActionBtn(
+                context, 
+                Icons.people, 
+                'Barbers', 
+                AppColors.warning,
+                onTap: () {
+                  Navigator.push(context, MaterialPageRoute(builder: (_) => const AdminStaffScreen()));
+                },
+              ),
+              _buildActionBtn(
+                context, 
+                Icons.campaign, 
+                'Broadcast', 
+                AppColors.success,
+                onTap: () {
+                  Navigator.push(context, MaterialPageRoute(builder: (_) => const AdminNotificationManagementScreen()));
+                },
+              ),
+              _buildActionBtn(
+                context, 
+                Icons.settings, 
+                'Settings', 
+                AppColors.textPrimary,
+                onTap: () {
+                  Navigator.push(context, MaterialPageRoute(builder: (_) => const AdminSettingsScreen()));
+                },
+              ),
             ],
           )
         ],
@@ -214,21 +248,24 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
     );
   }
   
-  Widget _buildActionBtn(BuildContext context, IconData icon, String label, Color color) {
-    return Column(
-      children: [
-        Container(
-          width: 60,
-          height: 60,
-          decoration: BoxDecoration(
-            color: color.withOpacity(0.1),
-            borderRadius: BorderRadius.circular(16),
+  Widget _buildActionBtn(BuildContext context, IconData icon, String label, Color color, {required VoidCallback onTap}) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Column(
+        children: [
+          Container(
+            width: 65,
+            height: 65,
+            decoration: BoxDecoration(
+              color: color.withOpacity(0.12),
+              borderRadius: BorderRadius.circular(18),
+            ),
+            child: Icon(icon, color: color, size: 28),
           ),
-          child: Icon(icon, color: color, size: 28),
-        ),
-        const SizedBox(height: 8),
-        Text(label, style: Theme.of(context).textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w500)),
-      ],
+          const SizedBox(height: 8),
+          Text(label, style: Theme.of(context).textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w600)),
+        ],
+      ),
     );
   }
 
