@@ -235,16 +235,41 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
   Widget _buildTodaySummary(BuildContext context) {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 24.0),
-      child: Row(
-        children: [
-          Expanded(
-            child: _buildSummaryCard(context, 'Appointments', '12', Icons.calendar_today),
-          ),
-          const SizedBox(width: 16),
-          Expanded(
-            child: _buildSummaryCard(context, 'Revenue', '₹450', Icons.currency_rupee),
-          ),
-        ],
+      child: StreamBuilder<List<Booking>>(
+        stream: FirestoreService().getTodayConfirmedBookings(),
+        builder: (context, snapshot) {
+          final todayBookings = snapshot.data ?? [];
+          final appointmentCount = todayBookings.length;
+          
+          double totalRevenue = 0;
+          for (var b in todayBookings) {
+            if (b.bookingStatus == 'confirmed' || b.bookingStatus == 'completed') {
+              totalRevenue += b.advancePaid;
+            }
+          }
+
+          return Row(
+            children: [
+              Expanded(
+                child: _buildSummaryCard(
+                  context, 
+                  'Today Appointments', 
+                  '$appointmentCount', 
+                  Icons.calendar_today,
+                ),
+              ),
+              const SizedBox(width: 16),
+              Expanded(
+                child: _buildSummaryCard(
+                  context, 
+                  'Today Revenue', 
+                  '₹${totalRevenue.toStringAsFixed(0)}', 
+                  Icons.currency_rupee,
+                ),
+              ),
+            ],
+          );
+        },
       ),
     );
   }
