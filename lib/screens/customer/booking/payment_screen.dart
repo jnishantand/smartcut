@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:uuid/uuid.dart';
+import 'package:razorpay_flutter/razorpay_flutter.dart';
 import '../../../theme/app_colors.dart';
 import '../../../providers/booking_provider.dart';
 import '../../../providers/user_provider.dart';
@@ -18,6 +19,22 @@ class PaymentScreen extends StatefulWidget {
 class _PaymentScreenState extends State<PaymentScreen> {
   int _selectedMethod = 0;
   bool _isProcessing = false;
+  late Razorpay _razorpay;
+
+  @override
+  void initState() {
+    super.initState();
+    _razorpay = Razorpay();
+    _razorpay.on(Razorpay.EVENT_PAYMENT_SUCCESS, _handlePaymentSuccess);
+    _razorpay.on(Razorpay.EVENT_PAYMENT_ERROR, _handlePaymentError);
+    _razorpay.on(Razorpay.EVENT_EXTERNAL_WALLET, _handleExternalWallet);
+  }
+
+  @override
+  void dispose() {
+    _razorpay.clear(); // Removes all listeners
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -143,7 +160,40 @@ class _PaymentScreenState extends State<PaymentScreen> {
     );
   }
 
-  Future<void> _processPayment() async {
+  void _processPayment() {
+    final bookingProvider = context.read<BookingProvider>();
+    final userProvider = context.read<UserProvider>();
+    
+    final service = bookingProvider.selectedService!;
+    final profile = userProvider.userProfile;
+
+    // Razorpay requires amounts in the smallest currency sub-unit (e.g. paise, cents).
+    // So $10.00 would be 1000 cents.
+    final int amountInCents = (service.advanceRequired * 100).toInt();
+
+    var options = {
+      'key': 'rzp_test_U34oMk0qZkEFzg', // Using the Test Key from CSV
+      'amount': amountInCents,
+      'name': 'Smartcut Salon',
+      'description': 'Advance Payment for ${service.name}',
+      'prefill': {
+        'contact': profile?.phoneNumber ?? '',
+        'email': profile?.email ?? ''
+      },
+      'theme': {
+        'color': '#2457A6' // AppColors.primary hex
+      }
+    };
+
+    try {
+      _razorpay.open(options);
+    } catch (e) {
+      debugPrint('Error launching Razorpay: $e');
+    }
+  }
+
+  Future<void> _handlePaymentSuccess(PaymentSuccessResponse response) async {
+    // Payment Successful - Now save the booking to Firestore
     setState(() => _isProcessing = true);
     
     final bookingProvider = context.read<BookingProvider>();
@@ -155,9 +205,6 @@ class _PaymentScreenState extends State<PaymentScreen> {
     final date = bookingProvider.selectedDate!;
     final time = bookingProvider.selectedTime!;
     final profile = userProvider.userProfile;
-
-    // Simulate network delay for payment gateway
-    await Future.delayed(const Duration(seconds: 2));
 
     try {
       final String bookingId = const Uuid().v4().substring(0, 8).toUpperCase();
@@ -174,7 +221,7 @@ class _PaymentScreenState extends State<PaymentScreen> {
         timeSlot: time,
         totalAmount: service.price,
         advancePaid: service.advanceRequired,
-        paymentStatus: 'advance_paid',
+        paymentStatus: 'advance_paid', // We could also store response.paymentId here
         bookingStatus: 'confirmed',
         createdAt: DateTime.now(),
       );
@@ -183,22 +230,35 @@ class _PaymentScreenState extends State<PaymentScreen> {
 
       if (mounted) {
         setState(() => _isProcessing = false);
-        // Reset the cart
         bookingProvider.reset();
         
         Navigator.pushAndRemoveUntil(
           context, 
           MaterialPageRoute(builder: (_) => BookingConfirmationScreen(booking: booking)),
-          (route) => false // Clear stack to prevent going back to payment
+          (route) => false
         );
       }
     } catch(e) {
       if (mounted) {
         setState(() => _isProcessing = false);
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Failed to complete booking: $e')),
+          SnackBar(content: Text('Payment succeeded but booking failed to save: $e')),
         );
       }
     }
+  }
+
+  void _handlePaymentError(PaymentFailureResponse response) {
+    // Show error message
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text('Payment Failed: ${response.message}')),
+    );
+  }
+
+  void _handleExternalWallet(ExternalWalletResponse response) {
+    // Show wallet message
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text('External Wallet Selected: ${response.walletName}')),
+    );
   }
 }
