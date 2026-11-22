@@ -58,7 +58,6 @@ class DefaultFirebaseOptions {
     databaseURL: 'https://smartcut-15624-default-rtdb.asia-southeast1.firebasedatabase.app',
     storageBucket: 'smartcut-15624.firebasestorage.app',
   );
-
   static const FirebaseOptions ios = FirebaseOptions(
     apiKey: 'AIzaSyDIyeUVLgvWYcXQnREpz-b1Va5BC_DJc3A',
     appId: '1:585760071145:ios:737e6e6389d06541333f78',
@@ -66,9 +65,9 @@ class DefaultFirebaseOptions {
     projectId: 'smartcut-15624',
     databaseURL: 'https://smartcut-15624-default-rtdb.asia-southeast1.firebasedatabase.app',
     storageBucket: 'smartcut-15624.firebasestorage.app',
+    iosClientId: '585760071145-a19jik7k1eqmvjj5coqjh17firfjiden.apps.googleusercontent.com',
     iosBundleId: 'com.example.smartcut',
   );
-
   static const FirebaseOptions macos = FirebaseOptions(
     apiKey: 'AIzaSyDIyeUVLgvWYcXQnREpz-b1Va5BC_DJc3A',
     appId: '1:585760071145:ios:737e6e6389d06541333f78',
@@ -76,6 +75,7 @@ class DefaultFirebaseOptions {
     projectId: 'smartcut-15624',
     databaseURL: 'https://smartcut-15624-default-rtdb.asia-southeast1.firebasedatabase.app',
     storageBucket: 'smartcut-15624.firebasestorage.app',
+    iosClientId: '585760071145-a19jik7k1eqmvjj5coqjh17firfjiden.apps.googleusercontent.com',
     iosBundleId: 'com.example.smartcut',
   );
 

@@ -13,7 +13,12 @@
           "package_name": "com.example.smartcut"
         }
       },
-      "oauth_client": [],
+      "oauth_client": [
+        {
+          "client_id": "585760071145-jl9hbkgep9nv498gcdccbcf6uv0rahfr.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
       "api_key": [
         {
           "current_key": "AIzaSyDZQXWJrj71DbUuvHmhyghAjpAd-6yzsbE"
@@ -21,7 +26,19 @@
       ],
       "services": {
         "appinvite_service": {
-          "other_platform_oauth_client": []
+          "other_platform_oauth_client": [
+            {
+              "client_id": "585760071145-jl9hbkgep9nv498gcdccbcf6uv0rahfr.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "585760071145-a19jik7k1eqmvjj5coqjh17firfjiden.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.example.smartcut"
+              }
+            }
+          ]
         }
       }
     }

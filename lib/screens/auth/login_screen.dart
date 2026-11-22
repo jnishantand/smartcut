@@ -68,6 +68,9 @@ class _LoginScreenState extends State<LoginScreen> {
     setState(() => _isLoading = true);
 
     try {
+      await GoogleSignIn.instance.initialize(
+        serverClientId: '585760071145-jl9hbkgep9nv498gcdccbcf6uv0rahfr.apps.googleusercontent.com',
+      );
       final GoogleSignInAccount? googleUser = await GoogleSignIn.instance.authenticate();
       if (googleUser == null) {
         setState(() => _isLoading = false);
