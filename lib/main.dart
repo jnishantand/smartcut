@@ -6,6 +6,7 @@ import 'theme/app_theme.dart';
 import 'screens/auth/auth_wrapper.dart';
 import 'providers/user_provider.dart';
 import 'providers/booking_provider.dart';
+import 'services/notification_service.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -13,8 +14,9 @@ void main() async {
     await Firebase.initializeApp(
       options: DefaultFirebaseOptions.currentPlatform,
     );
+    await NotificationService().initialize();
   } catch (e) {
-    debugPrint("Firebase init failed: $e");
+    debugPrint("Firebase/Notification init failed: $e");
   }
   runApp(
     MultiProvider(

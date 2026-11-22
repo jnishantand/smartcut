@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:developer';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
@@ -6,8 +7,6 @@ import 'package:firebase_auth/firebase_auth.dart';
 
 @pragma('vm:entry-point')
 Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
-  // If you're going to use other Firebase services in the background, such as Firestore,
-  // make sure you call `initializeApp` before using other Firebase services.
   log("Handling a background message: ${message.messageId}");
 }
 
@@ -22,7 +21,12 @@ class NotificationService {
   final FlutterLocalNotificationsPlugin _localNotificationsPlugin =
       FlutterLocalNotificationsPlugin();
 
+  StreamSubscription<QuerySnapshot>? _notificationSubscription;
+  DateTime? _initTime;
+
   Future<void> initialize() async {
+    _initTime = DateTime.now();
+
     // 1. Request Permission
     NotificationSettings settings = await _firebaseMessaging.requestPermission(
       alert: true,
@@ -31,16 +35,33 @@ class NotificationService {
       provisional: false,
     );
 
-    log('User granted permission: ${settings.authorizationStatus}');
+    log('User granted FCM permission: ${settings.authorizationStatus}');
 
-    // 2. Initialize Local Notifications (for foreground notifications)
+    // 2. Create High Importance Android Channel for Heads-up Banner
+    const AndroidNotificationChannel channel = AndroidNotificationChannel(
+      'high_importance_channel', // id
+      'High Importance Notifications', // name
+      description: 'This channel is used for important notifications.',
+      importance: Importance.max,
+      playSound: true,
+    );
+
+    final androidPlugin = _localNotificationsPlugin
+        .resolvePlatformSpecificImplementation<AndroidFlutterLocalNotificationsPlugin>();
+    
+    if (androidPlugin != null) {
+      await androidPlugin.createNotificationChannel(channel);
+      await androidPlugin.requestNotificationsPermission();
+    }
+
+    // 3. Initialize Local Notifications
     const AndroidInitializationSettings initializationSettingsAndroid =
         AndroidInitializationSettings('@mipmap/ic_launcher');
     const DarwinInitializationSettings initializationSettingsDarwin =
         DarwinInitializationSettings(
-      requestSoundPermission: false,
-      requestBadgePermission: false,
-      requestAlertPermission: false,
+      requestSoundPermission: true,
+      requestBadgePermission: true,
+      requestAlertPermission: true,
     );
     const InitializationSettings initializationSettings = InitializationSettings(
       android: initializationSettingsAndroid,
@@ -48,76 +69,88 @@ class NotificationService {
     );
 
     await _localNotificationsPlugin.initialize(
-
-      onDidReceiveNotificationResponse: _onSelectNotification, settings: InitializationSettings(),
+      initializationSettings,
+      onDidReceiveNotificationResponse: (response) {
+        log("Notification tapped: ${response.payload}");
+      },
     );
 
-    // 3. Set Background Message Handler
+    // 4. Set Background Message Handler
     FirebaseMessaging.onBackgroundMessage(_firebaseMessagingBackgroundHandler);
 
-    // 4. Handle Foreground Messages
+    // 5. Handle Foreground Messages from FCM
     FirebaseMessaging.onMessage.listen((RemoteMessage message) {
-      log('Got a message whilst in the foreground!');
-      log('Message data: ${message.data}');
-
+      log('Got FCM message in foreground: ${message.notification?.title}');
       if (message.notification != null) {
-        log('Message also contained a notification: ${message.notification}');
-        _showForegroundNotification(message);
+        showLocalNotification(
+          title: message.notification!.title ?? 'SmartCut Notification',
+          body: message.notification!.body ?? '',
+        );
       }
     });
 
-    // 5. Handle App Opened from Terminated State
-    RemoteMessage? initialMessage =
-        await FirebaseMessaging.instance.getInitialMessage();
-    if (initialMessage != null) {
-      _handleMessageTap(initialMessage);
-    }
-
-    // 6. Handle App Opened from Background State
-    FirebaseMessaging.onMessageOpenedApp.listen((RemoteMessage message) {
-      _handleMessageTap(message);
-    });
+    // 6. Listen to Firestore Broadcast Notifications in Real-time for Instant System Banner
+    _startFirestoreNotificationListener();
 
     // 7. Get and save FCM Token
     await _saveDeviceToken();
-    
-    // Refresh token on change
     _firebaseMessaging.onTokenRefresh.listen((newToken) {
-       _saveTokenToFirestore(newToken);
+      _saveTokenToFirestore(newToken);
     });
   }
 
-  void _onSelectNotification(NotificationResponse notificationResponse) {
-    // Handle foreground notification tap logic here
-    log("Foreground notification tapped with payload: ${notificationResponse.payload}");
+  void _startFirestoreNotificationListener() {
+    FirebaseAuth.instance.authStateChanges().listen((user) {
+      _notificationSubscription?.cancel();
+      if (user != null) {
+        _notificationSubscription = FirebaseFirestore.instance
+            .collection('notifications')
+            .where('userId', whereIn: [user.uid, 'all'])
+            .orderBy('createdAt', descending: true)
+            .snapshots()
+            .listen((snapshot) {
+          for (var change in snapshot.docChanges) {
+            if (change.type == DocumentChangeType.added) {
+              final data = change.doc.data() as Map<String, dynamic>?;
+              if (data != null) {
+                final createdAt = (data['createdAt'] as Timestamp?)?.toDate();
+                // Only show system banner for notifications created AFTER the app initialized
+                if (_initTime != null && createdAt != null && createdAt.isAfter(_initTime!)) {
+                  showLocalNotification(
+                    title: data['title'] ?? 'SmartCut Announcement',
+                    body: data['body'] ?? '',
+                  );
+                }
+              }
+            }
+          }
+        });
+      }
+    });
   }
 
-  void _handleMessageTap(RemoteMessage message) {
-    // Navigate based on message.data here
-    log("Handling message tap: ${message.data}");
-  }
-
-  Future<void> _showForegroundNotification(RemoteMessage message) async {
-    const AndroidNotificationDetails androidPlatformChannelSpecifics =
-        AndroidNotificationDetails(
-      'high_importance_channel', // id
-      'High Importance Notifications', // name
+  Future<void> showLocalNotification({required String title, required String body}) async {
+    const AndroidNotificationDetails androidDetails = AndroidNotificationDetails(
+      'high_importance_channel',
+      'High Importance Notifications',
       channelDescription: 'This channel is used for important notifications.',
       importance: Importance.max,
       priority: Priority.high,
-      showWhen: false,
+      playSound: true,
+      enableVibration: true,
+      styleInformation: BigTextStyleInformation(''),
     );
-    const NotificationDetails platformChannelSpecifics = NotificationDetails(
-      android: androidPlatformChannelSpecifics,
-      iOS: DarwinNotificationDetails(),
+
+    const NotificationDetails platformDetails = NotificationDetails(
+      android: androidDetails,
+      iOS: DarwinNotificationDetails(presentAlert: true, presentSound: true, presentBadge: true),
     );
 
     await _localNotificationsPlugin.show(
-      id: message.hashCode,
-
-
-      notificationDetails: platformChannelSpecifics,
-      payload: message.data.toString(),
+      DateTime.now().millisecondsSinceEpoch ~/ 1000,
+      title,
+      body,
+      platformDetails,
     );
   }
 
@@ -136,10 +169,7 @@ class NotificationService {
     User? user = FirebaseAuth.instance.currentUser;
     if (user != null) {
       try {
-        await FirebaseFirestore.instance
-            .collection('users')
-            .doc(user.uid)
-            .set({
+        await FirebaseFirestore.instance.collection('users').doc(user.uid).set({
           'fcmTokens': FieldValue.arrayUnion([token])
         }, SetOptions(merge: true));
         log("FCM Token saved to Firestore");
@@ -147,5 +177,9 @@ class NotificationService {
         log("Error saving FCM token to Firestore: $e");
       }
     }
+  }
+
+  void dispose() {
+    _notificationSubscription?.cancel();
   }
 }
