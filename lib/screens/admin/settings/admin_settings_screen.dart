@@ -7,6 +7,7 @@ import '../admin_notification_management_screen.dart';
 import '../services/admin_services_screen.dart';
 import '../staff/admin_staff_screen.dart';
 import 'admin_business_hours_screen.dart';
+import 'admin_payment_history_screen.dart';
 
 class AdminSettingsScreen extends StatelessWidget {
   const AdminSettingsScreen({super.key});
@@ -33,7 +34,9 @@ class AdminSettingsScreen extends StatelessWidget {
           
           const SizedBox(height: 24),
           _buildSectionTitle(context, 'Operations & Rules'),
-          _buildSettingsTile(context, Icons.attach_money, 'Payment & Deposit Settings', () {}),
+          _buildSettingsTile(context, Icons.currency_rupee, 'Payment & Revenue History', () {
+            Navigator.push(context, MaterialPageRoute(builder: (_) => const AdminPaymentHistoryScreen()));
+          }),
           _buildSettingsTile(context, Icons.notifications_active, 'Notification Dashboard', () {
             Navigator.push(context, MaterialPageRoute(builder: (_) => const AdminNotificationManagementScreen()));
           }),
