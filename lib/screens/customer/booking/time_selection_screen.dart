@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:intl/intl.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import '../../../theme/app_colors.dart';
 import '../../../providers/booking_provider.dart';
 import 'booking_summary_screen.dart';
@@ -14,15 +16,23 @@ class TimeSelectionScreen extends StatefulWidget {
 class _TimeSelectionScreenState extends State<TimeSelectionScreen> {
   int _selectedDateIndex = 0;
   String? _selectedTime;
-  
+
   final List<String> _morningSlots = ['09:00 AM', '09:45 AM', '10:30 AM', '11:15 AM'];
   final List<String> _afternoonSlots = ['12:00 PM', '12:45 PM', '01:30 PM', '02:15 PM', '03:00 PM', '03:45 PM'];
-  final List<String> _eveningSlots = ['04:30 PM', '05:15 PM', '06:00 PM'];
-  
-  final List<String> _bookedSlots = ['10:30 AM', '01:30 PM']; // Simulated unavailable slots
+  final List<String> _eveningSlots = ['04:30 PM', '05:15 PM', '06:00 PM', '06:45 PM', '07:30 PM', '08:15 PM'];
+
+  DateTime get _selectedDate {
+    final now = DateTime.now();
+    final today = DateTime(now.year, now.month, now.day);
+    return today.add(Duration(days: _selectedDateIndex));
+  }
 
   @override
   Widget build(BuildContext context) {
+    final selectedDate = _selectedDate;
+    final startOfDay = DateTime(selectedDate.year, selectedDate.month, selectedDate.day);
+    final endOfDay = DateTime(selectedDate.year, selectedDate.month, selectedDate.day, 23, 59, 59);
+
     return Scaffold(
       appBar: AppBar(
         title: const Text('Select Date & Time'),
@@ -36,44 +46,74 @@ class _TimeSelectionScreenState extends State<TimeSelectionScreen> {
         children: [
           _buildDateSelector(),
           Expanded(
-            child: ListView(
-              padding: const EdgeInsets.all(24.0),
-              children: [
-                Container(
-                  padding: const EdgeInsets.all(12),
-                  decoration: BoxDecoration(
-                    color: AppColors.secondary.withOpacity(0.5),
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: Row(
-                    children: [
-                      const Icon(Icons.info_outline, color: AppColors.primary, size: 20),
-                      const SizedBox(width: 8),
-                      Expanded(
-                        child: Text(
-                          'Appointments must be booked at least 60 minutes in advance.',
-                          style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: AppColors.primary),
-                        ),
+            child: StreamBuilder<QuerySnapshot>(
+              stream: FirebaseFirestore.instance
+                  .collection('bookings')
+                  .where('bookingStatus', isEqualTo: 'confirmed')
+                  .where('appointmentDate', isGreaterThanOrEqualTo: startOfDay)
+                  .where('appointmentDate', isLessThanOrEqualTo: endOfDay)
+                  .snapshots(),
+              builder: (context, snapshot) {
+                // Count bookings per slot
+                final Map<String, int> slotBookingCounts = {};
+                if (snapshot.hasData) {
+                  for (var doc in snapshot.data!.docs) {
+                    final data = doc.data() as Map<String, dynamic>;
+                    final slot = data['timeSlot'] as String?;
+                    if (slot != null) {
+                      slotBookingCounts[slot] = (slotBookingCounts[slot] ?? 0) + 1;
+                    }
+                  }
+                }
+
+                // A slot is fully booked if 4 bookings exist for that slot (4 chairs)
+                final Set<String> fullyBookedSlots = {};
+                slotBookingCounts.forEach((slot, count) {
+                  if (count >= 4) {
+                    fullyBookedSlots.add(slot);
+                  }
+                });
+
+                return ListView(
+                  padding: const EdgeInsets.all(24.0),
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        color: AppColors.secondary.withOpacity(0.5),
+                        borderRadius: BorderRadius.circular(8),
                       ),
-                    ],
-                  ),
-                ),
-                const SizedBox(height: 32),
-                
-                Text('Morning', style: Theme.of(context).textTheme.titleMedium),
-                const SizedBox(height: 16),
-                _buildTimeGrid(_morningSlots),
-                
-                const SizedBox(height: 32),
-                Text('Afternoon', style: Theme.of(context).textTheme.titleMedium),
-                const SizedBox(height: 16),
-                _buildTimeGrid(_afternoonSlots),
-                
-                const SizedBox(height: 32),
-                Text('Evening', style: Theme.of(context).textTheme.titleMedium),
-                const SizedBox(height: 16),
-                _buildTimeGrid(_eveningSlots),
-              ],
+                      child: Row(
+                        children: [
+                          const Icon(Icons.info_outline, color: AppColors.primary, size: 20),
+                          const SizedBox(width: 8),
+                          Expanded(
+                            child: Text(
+                              'Showing real-time availability for ${DateFormat('EEE, dd MMM').format(selectedDate)}.',
+                              style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: AppColors.primary),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 32),
+
+                    Text('Morning', style: Theme.of(context).textTheme.titleMedium),
+                    const SizedBox(height: 16),
+                    _buildTimeGrid(_morningSlots, fullyBookedSlots, selectedDate),
+
+                    const SizedBox(height: 32),
+                    Text('Afternoon', style: Theme.of(context).textTheme.titleMedium),
+                    const SizedBox(height: 16),
+                    _buildTimeGrid(_afternoonSlots, fullyBookedSlots, selectedDate),
+
+                    const SizedBox(height: 32),
+                    Text('Evening', style: Theme.of(context).textTheme.titleMedium),
+                    const SizedBox(height: 16),
+                    _buildTimeGrid(_eveningSlots, fullyBookedSlots, selectedDate),
+                  ],
+                );
+              },
             ),
           ),
           _buildBottomBar(),
@@ -83,6 +123,9 @@ class _TimeSelectionScreenState extends State<TimeSelectionScreen> {
   }
 
   Widget _buildDateSelector() {
+    final now = DateTime.now();
+    final today = DateTime(now.year, now.month, now.day);
+
     return Container(
       height: 100,
       padding: const EdgeInsets.symmetric(vertical: 16),
@@ -93,18 +136,18 @@ class _TimeSelectionScreenState extends State<TimeSelectionScreen> {
       child: ListView.builder(
         scrollDirection: Axis.horizontal,
         padding: const EdgeInsets.symmetric(horizontal: 16),
-        itemCount: 7, // Next 7 days
+        itemCount: 7, // Next 7 real calendar days
         itemBuilder: (context, index) {
           final isSelected = _selectedDateIndex == index;
-          // Simple mock dates
-          final day = 12 + index; 
-          final dayName = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'][index % 7];
-          
+          final date = today.add(Duration(days: index));
+          final dayName = DateFormat('EEE').format(date); // Mon, Tue, etc.
+          final dayNum = DateFormat('d').format(date); // 1, 2, 3...
+
           return GestureDetector(
             onTap: () {
               setState(() {
                 _selectedDateIndex = index;
-                _selectedTime = null; // Reset time when date changes
+                _selectedTime = null; // Reset time selection when date changes
               });
             },
             child: Container(
@@ -127,7 +170,7 @@ class _TimeSelectionScreenState extends State<TimeSelectionScreen> {
                   ),
                   const SizedBox(height: 4),
                   Text(
-                    '$day',
+                    dayNum,
                     style: TextStyle(
                       color: isSelected ? Colors.white : AppColors.textPrimary,
                       fontSize: 18,
@@ -143,7 +186,12 @@ class _TimeSelectionScreenState extends State<TimeSelectionScreen> {
     );
   }
 
-  Widget _buildTimeGrid(List<String> slots) {
+  Widget _buildTimeGrid(List<String> slots, Set<String> fullyBookedSlots, DateTime selectedDate) {
+    final now = DateTime.now();
+    final isToday = selectedDate.year == now.year &&
+        selectedDate.month == now.month &&
+        selectedDate.day == now.day;
+
     return GridView.builder(
       shrinkWrap: true,
       physics: const NeverScrollableScrollPhysics(),
@@ -155,31 +203,57 @@ class _TimeSelectionScreenState extends State<TimeSelectionScreen> {
       ),
       itemCount: slots.length,
       itemBuilder: (context, index) {
-        final time = slots[index];
-        final isBooked = _bookedSlots.contains(time);
-        final isSelected = _selectedTime == time;
-        
+        final timeStr = slots[index];
+        bool isUnavailable = fullyBookedSlots.contains(timeStr);
+
+        // If today, check if time slot is already past
+        if (isToday) {
+          try {
+            final parsedTime = DateFormat('hh:mm a').parse(timeStr);
+            final slotDateTime = DateTime(
+              selectedDate.year,
+              selectedDate.month,
+              selectedDate.day,
+              parsedTime.hour,
+              parsedTime.minute,
+            );
+            if (slotDateTime.isBefore(now)) {
+              isUnavailable = true; // Disable past hours for today
+            }
+          } catch (_) {}
+        }
+
+        final isSelected = _selectedTime == timeStr;
+
         return GestureDetector(
-          onTap: isBooked ? null : () {
-            setState(() {
-              _selectedTime = time;
-            });
-          },
+          onTap: isUnavailable
+              ? null
+              : () {
+                  setState(() {
+                    _selectedTime = timeStr;
+                  });
+                },
           child: Container(
             alignment: Alignment.center,
             decoration: BoxDecoration(
-              color: isBooked ? AppColors.background : (isSelected ? AppColors.primary : AppColors.surface),
+              color: isUnavailable
+                  ? AppColors.background
+                  : (isSelected ? AppColors.primary : AppColors.surface),
               borderRadius: BorderRadius.circular(12),
               border: Border.all(
-                color: isBooked ? Colors.transparent : (isSelected ? AppColors.primary : AppColors.border)
+                color: isUnavailable
+                    ? Colors.transparent
+                    : (isSelected ? AppColors.primary : AppColors.border),
               ),
             ),
             child: Text(
-              time,
+              timeStr,
               style: TextStyle(
-                color: isBooked ? AppColors.textSecondary.withOpacity(0.5) : (isSelected ? Colors.white : AppColors.textPrimary),
+                color: isUnavailable
+                    ? AppColors.textSecondary.withOpacity(0.5)
+                    : (isSelected ? Colors.white : AppColors.textPrimary),
                 fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
-                decoration: isBooked ? TextDecoration.lineThrough : null,
+                decoration: isUnavailable ? TextDecoration.lineThrough : null,
               ),
             ),
           ),
@@ -202,18 +276,17 @@ class _TimeSelectionScreenState extends State<TimeSelectionScreen> {
         ],
       ),
       child: ElevatedButton(
-        onPressed: _selectedTime == null ? null : () {
-          // Construct the date correctly (using today + selected index as a mock)
-          final now = DateTime.now();
-          final bookingDate = DateTime(now.year, now.month, now.day + _selectedDateIndex);
-          
-          context.read<BookingProvider>().selectDateTime(bookingDate, _selectedTime!);
+        onPressed: _selectedTime == null
+            ? null
+            : () {
+                final bookingDate = _selectedDate;
+                context.read<BookingProvider>().selectDateTime(bookingDate, _selectedTime!);
 
-          Navigator.push(
-            context, 
-            MaterialPageRoute(builder: (_) => const BookingSummaryScreen())
-          );
-        },
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (_) => const BookingSummaryScreen()),
+                );
+              },
         style: ElevatedButton.styleFrom(
           minimumSize: const Size(double.infinity, 56),
         ),
