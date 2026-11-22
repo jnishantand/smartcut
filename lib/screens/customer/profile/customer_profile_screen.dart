@@ -8,7 +8,7 @@ import '../../notifications/notification_preferences_screen.dart';
 import 'payment_history_screen.dart';
 import 'faq_screen.dart';
 import 'about_screen.dart';
-import '../../auth/login_screen.dart';
+import '../../auth/auth_wrapper.dart';
 
 class CustomerProfileScreen extends StatelessWidget {
   const CustomerProfileScreen({super.key});
@@ -143,8 +143,11 @@ class CustomerProfileScreen extends StatelessWidget {
               await GoogleSignIn.instance.signOut();
             } catch (_) {}
             if (context.mounted) {
-              // Pop all pushed routes back to AuthWrapper so AuthWrapper can cleanly switch to LoginScreen
-              Navigator.of(context).popUntil((route) => route.isFirst);
+              Navigator.pushAndRemoveUntil(
+                context,
+                MaterialPageRoute(builder: (_) => const AuthWrapper()),
+                (route) => false,
+              );
             }
           },
         ),

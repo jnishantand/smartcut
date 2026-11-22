@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import '../../../theme/app_colors.dart';
-import '../../auth/login_screen.dart';
+import '../../auth/auth_wrapper.dart';
 import '../admin_notification_management_screen.dart';
 
 class AdminSettingsScreen extends StatelessWidget {
@@ -36,8 +36,11 @@ class AdminSettingsScreen extends StatelessWidget {
               await GoogleSignIn.instance.signOut();
             } catch (_) {}
             if (context.mounted) {
-              // Pop all pushed routes back to AuthWrapper so AuthWrapper can cleanly switch to LoginScreen
-              Navigator.of(context).popUntil((route) => route.isFirst);
+              Navigator.pushAndRemoveUntil(
+                context, 
+                MaterialPageRoute(builder: (_) => const AuthWrapper()),
+                (route) => false,
+              );
             }
           }, isDestructive: true),
         ],
