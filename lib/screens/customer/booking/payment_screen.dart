@@ -190,6 +190,12 @@ class _PaymentScreenState extends State<PaymentScreen> {
       _razorpay.open(options);
     } catch (e) {
       debugPrint('Error launching Razorpay: $e');
+      if (mounted) {
+        setState(() => _isProcessing = false);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Failed to launch payment: $e')),
+        );
+      }
     }
   }
 
