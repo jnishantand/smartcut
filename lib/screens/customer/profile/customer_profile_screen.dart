@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:google_sign_in/google_sign_in.dart';
 import 'package:provider/provider.dart';
 import '../../../theme/app_colors.dart';
 import '../../../providers/user_provider.dart';
@@ -119,7 +120,10 @@ class CustomerProfileScreen extends StatelessWidget {
           textColor: AppColors.error,
           iconColor: AppColors.error,
           onTap: () async {
-            await FirebaseAuth.instance.signOut(); // End the Firebase session
+            await FirebaseAuth.instance.signOut();
+            try {
+              await GoogleSignIn.instance.signOut();
+            } catch (_) {}
             if (context.mounted) {
               Navigator.pushAndRemoveUntil(
                 context, 

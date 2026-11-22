@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:google_sign_in/google_sign_in.dart';
 import '../../../theme/app_colors.dart';
 import '../../auth/login_screen.dart';
 import '../admin_notification_management_screen.dart';
@@ -30,7 +31,10 @@ class AdminSettingsScreen extends StatelessWidget {
           
           const SizedBox(height: 32),
           _buildSettingsTile(context, Icons.logout, 'Logout', () async {
-            await FirebaseAuth.instance.signOut(); // End the Firebase session
+            await FirebaseAuth.instance.signOut();
+            try {
+              await GoogleSignIn.instance.signOut();
+            } catch (_) {}
             if (context.mounted) {
               Navigator.pushAndRemoveUntil(
                 context, 
