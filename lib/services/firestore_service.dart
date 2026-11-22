@@ -205,14 +205,4 @@ class FirestoreService {
 
     await batch.commit();
   }
-
-  // --- Business Hours & Time Slots ---
-  Stream<DocumentSnapshot> getBusinessHours() {
-    return _db.collection('settings').doc('business_hours').snapshots();
-  }
-
-  Future<void> updateBusinessHours(Map<String, dynamic> data) async {
-    await _db.collection('settings').doc('business_hours').set(
-        data, SetOptions(merge: true));
-  }
 }
