@@ -7,6 +7,11 @@ import '../../../widgets/service_card.dart';
 import '../../../providers/user_provider.dart';
 import '../../../services/firestore_service.dart';
 import '../../../models/salon_service.dart';
+import '../../../models/booking.dart';
+import '../../../widgets/service_card.dart';
+import '../../../providers/user_provider.dart';
+import '../../../services/firestore_service.dart';
+import '../../../models/salon_service.dart';
 
 class CustomerHomeScreen extends StatelessWidget {
   const CustomerHomeScreen({super.key});
@@ -265,53 +270,81 @@ class CustomerHomeScreen extends StatelessWidget {
   }
 
   Widget _buildUpcomingAppointment(BuildContext context) {
-    // This would typically only show if there is an upcoming appointment
-    return Padding(
-      padding: const EdgeInsets.all(24.0),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text('Upcoming Appointment', style: Theme.of(context).textTheme.titleLarge),
-          const SizedBox(height: 16),
-          Container(
-            padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              color: AppColors.secondary,
-              borderRadius: BorderRadius.circular(16),
-            ),
-            child: Row(
-              children: [
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                  decoration: BoxDecoration(
-                    color: AppColors.primary,
-                    borderRadius: BorderRadius.circular(12),
+    return Consumer<UserProvider>(
+      builder: (context, userProvider, child) {
+        final profile = userProvider.userProfile;
+        if (profile == null) return const SizedBox.shrink();
+
+        return StreamBuilder<List<Booking>>(
+          stream: FirestoreService().getUserBookings(profile.uid),
+          builder: (context, snapshot) {
+            if (!snapshot.hasData || snapshot.data!.isEmpty) {
+              return const SizedBox.shrink();
+            }
+
+            // Find the closest upcoming confirmed appointment
+            final upcomingBookings = snapshot.data!
+                .where((b) => b.bookingStatus == 'confirmed' && b.appointmentDate.isAfter(DateTime.now().subtract(const Duration(hours: 1))))
+                .toList();
+
+            if (upcomingBookings.isEmpty) return const SizedBox.shrink();
+
+            // Sort to get the earliest one
+            upcomingBookings.sort((a, b) => a.appointmentDate.compareTo(b.appointmentDate));
+            final nextBooking = upcomingBookings.first;
+            
+            final monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+
+            return Padding(
+              padding: const EdgeInsets.all(24.0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text('Upcoming Appointment', style: Theme.of(context).textTheme.titleLarge),
+                  const SizedBox(height: 16),
+                  Container(
+                    padding: const EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      color: AppColors.secondary,
+                      borderRadius: BorderRadius.circular(16),
+                    ),
+                    child: Row(
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                          decoration: BoxDecoration(
+                            color: AppColors.primary,
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: Column(
+                            children: [
+                              Text('${nextBooking.appointmentDate.day}', style: Theme.of(context).textTheme.titleLarge?.copyWith(color: Colors.white)),
+                              Text(monthNames[nextBooking.appointmentDate.month - 1], style: Theme.of(context).textTheme.labelLarge),
+                            ],
+                          ),
+                        ),
+                        const SizedBox(width: 16),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(nextBooking.serviceName, style: Theme.of(context).textTheme.titleMedium),
+                              const SizedBox(height: 4),
+                              Text(nextBooking.timeSlot, style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: AppColors.primary)),
+                            ],
+                          ),
+                        ),
+                        const Icon(Icons.arrow_forward_ios, size: 16, color: AppColors.primary),
+                      ],
+                    ),
                   ),
-                  child: Column(
-                    children: [
-                      Text('12', style: Theme.of(context).textTheme.titleLarge?.copyWith(color: Colors.white)),
-                      Text('Nov', style: Theme.of(context).textTheme.labelLarge),
-                    ],
-                  ),
-                ),
-                const SizedBox(width: 16),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text('Classic Haircut', style: Theme.of(context).textTheme.titleMedium),
-                      const SizedBox(height: 4),
-                      Text('3:00 PM - 3:45 PM', style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: AppColors.primary)),
-                    ],
-                  ),
-                ),
-                const Icon(Icons.arrow_forward_ios, size: 16, color: AppColors.primary),
-              ],
-            ),
-          ),
-          const SizedBox(height: 40), // Bottom padding
-        ],
-      ),
+                  const SizedBox(height: 40),
+                ],
+              ),
+            );
+          }
+        );
+      }
     );
   }
 }
