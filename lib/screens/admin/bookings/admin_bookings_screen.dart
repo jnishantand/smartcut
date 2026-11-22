@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
 import '../../../theme/app_colors.dart';
+import '../../../services/firestore_service.dart';
+import '../../../models/booking.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
 class AdminBookingsScreen extends StatelessWidget {
   const AdminBookingsScreen({super.key});
@@ -32,32 +35,64 @@ class AdminBookingsScreen extends StatelessWidget {
         ),
         body: TabBarView(
           children: [
-            _buildBookingsList(isToday: true),
-            _buildBookingsList(isUpcoming: true),
-            _buildBookingsList(isCompleted: true),
-            _buildBookingsList(isCancelled: true),
+            _buildBookingsList(status: 'confirmed', isTodayOnly: true),
+            _buildBookingsList(status: 'confirmed', isTodayOnly: false),
+            _buildBookingsList(status: 'completed', isTodayOnly: false),
+            _buildBookingsList(status: 'cancelled', isTodayOnly: false),
           ],
         ),
       ),
     );
   }
 
-  Widget _buildBookingsList({bool isToday = false, bool isUpcoming = false, bool isCompleted = false, bool isCancelled = false}) {
-    // Dummy conditional rendering
-    if (isToday) {
-      return ListView(
-        padding: const EdgeInsets.all(16),
-        children: [
-          _buildAdminBookingCard('Alex Johnson', 'Classic Haircut', 'Today, 3:00 PM', 'Sarah Jenkins', 'Advance Paid', 'Confirmed'),
-          _buildAdminBookingCard('Sam Smith', 'Beard Trim', 'Today, 4:30 PM', 'Michael Brown', 'Paid in Full', 'Confirmed'),
-        ],
-      );
-    }
-    
-    return Center(child: Text('No bookings found for this filter.', style: TextStyle(color: AppColors.textSecondary)));
+  Widget _buildBookingsList({required String status, required bool isTodayOnly}) {
+    return StreamBuilder<List<Booking>>(
+      stream: FirestoreService().getAdminBookings(status),
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return const Center(child: CircularProgressIndicator());
+        }
+
+        var bookings = snapshot.data ?? [];
+
+        if (isTodayOnly) {
+          final now = DateTime.now();
+          bookings = bookings.where((b) => 
+            b.appointmentDate.year == now.year &&
+            b.appointmentDate.month == now.month &&
+            b.appointmentDate.day == now.day
+          ).toList();
+        }
+
+        if (bookings.isEmpty) {
+          return Center(child: Text('No bookings found.', style: const TextStyle(color: AppColors.textSecondary)));
+        }
+
+        return ListView.builder(
+          padding: const EdgeInsets.all(16),
+          itemCount: bookings.length,
+          itemBuilder: (context, index) {
+            final b = bookings[index];
+            final dateStr = isTodayOnly 
+                ? 'Today, ${b.timeSlot}'
+                : '${b.appointmentDate.day}/${b.appointmentDate.month}/${b.appointmentDate.year}, ${b.timeSlot}';
+                
+            return _buildAdminBookingCard(
+              b.id,
+              b.customerName,
+              b.serviceName,
+              dateStr,
+              b.staffName,
+              b.paymentStatus == 'advance_paid' ? 'Advance Paid' : 'Paid in Full',
+              b.bookingStatus.toUpperCase()
+            );
+          },
+        );
+      }
+    );
   }
 
-  Widget _buildAdminBookingCard(String customerName, String service, String time, String staff, String payment, String status) {
+  Widget _buildAdminBookingCard(String id, String customerName, String service, String time, String staff, String payment, String status) {
     return Card(
       margin: const EdgeInsets.only(bottom: 16),
       child: Padding(
