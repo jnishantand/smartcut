@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../../theme/app_colors.dart';
+import '../../../services/firestore_service.dart';
+import '../../../models/booking.dart';
 
 class AdminQueueScreen extends StatelessWidget {
   const AdminQueueScreen({super.key});
@@ -16,8 +18,8 @@ class AdminQueueScreen extends StatelessWidget {
             unselectedLabelColor: AppColors.textSecondary,
             indicatorColor: AppColors.primary,
             tabs: [
-              Tab(text: 'Waiting (4)'),
-              Tab(text: 'Serving (3)'),
+              Tab(text: 'Waiting'),
+              Tab(text: 'Serving'),
               Tab(text: 'Done'),
             ],
           ),
@@ -42,63 +44,115 @@ class AdminQueueScreen extends StatelessWidget {
   }
 
   Widget _buildWaitingList() {
-    return ListView(
-      padding: const EdgeInsets.all(16.0),
-      children: [
-        _buildQueueItem(
-          name: 'Jake Peralta',
-          service: 'Classic Haircut',
-          waitTime: 'Waiting for 15 mins',
-          isWalkIn: true,
-          actionLabel: 'Start Serving',
-          actionColor: AppColors.primary,
-        ),
-        _buildQueueItem(
-          name: 'Amy Santiago',
-          service: 'Hair Coloring',
-          waitTime: 'Waiting for 5 mins',
-          isWalkIn: false,
-          appointmentTime: '3:00 PM',
-          actionLabel: 'Start Serving',
-          actionColor: AppColors.primary,
-        ),
-      ],
+    return StreamBuilder<List<Booking>>(
+      stream: FirestoreService().getAdminBookings('confirmed'),
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return const Center(child: CircularProgressIndicator());
+        }
+        
+        final bookings = snapshot.data ?? [];
+        
+        if (bookings.isEmpty) {
+          return const Center(child: Text("No waiting customers"));
+        }
+        
+        return ListView.builder(
+          padding: const EdgeInsets.all(16.0),
+          itemCount: bookings.length,
+          itemBuilder: (context, index) {
+            final b = bookings[index];
+            return _buildQueueItem(
+              bookingId: b.id,
+              name: b.customerName,
+              service: b.serviceName,
+              waitTime: 'Scheduled for ${b.timeSlot}',
+              isWalkIn: false,
+              appointmentTime: b.timeSlot,
+              actionLabel: 'Start Serving',
+              actionColor: AppColors.primary,
+              onActionPressed: () => FirestoreService().updateBookingStatus(b.id, 'serving'),
+            );
+          },
+        );
+      },
     );
   }
 
   Widget _buildServingList() {
-    return ListView(
-      padding: const EdgeInsets.all(16.0),
-      children: [
-        _buildQueueItem(
-          name: 'Charles Boyle',
-          service: 'Beard Trim',
-          waitTime: 'Serving for 20 mins',
-          isWalkIn: true,
-          actionLabel: 'Complete',
-          actionColor: AppColors.success,
-        ),
-      ],
+    return StreamBuilder<List<Booking>>(
+      stream: FirestoreService().getAdminBookings('serving'),
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return const Center(child: CircularProgressIndicator());
+        }
+        
+        final bookings = snapshot.data ?? [];
+        
+        if (bookings.isEmpty) {
+          return const Center(child: Text("No one is currently being served"));
+        }
+        
+        return ListView.builder(
+          padding: const EdgeInsets.all(16.0),
+          itemCount: bookings.length,
+          itemBuilder: (context, index) {
+            final b = bookings[index];
+            return _buildQueueItem(
+              bookingId: b.id,
+              name: b.customerName,
+              service: b.serviceName,
+              waitTime: 'Serving now',
+              isWalkIn: false,
+              actionLabel: 'Complete',
+              actionColor: AppColors.success,
+              onActionPressed: () => FirestoreService().updateBookingStatus(b.id, 'completed'),
+            );
+          },
+        );
+      },
     );
   }
 
   Widget _buildCompletedList() {
-    return ListView(
-      padding: const EdgeInsets.all(16.0),
-      children: [
-        _buildQueueItem(
-          name: 'Rosa Diaz',
-          service: 'Skin Fade',
-          waitTime: 'Completed at 2:45 PM',
-          isWalkIn: false,
-          actionLabel: 'View Receipt',
-          actionColor: AppColors.textSecondary,
-        ),
-      ],
+    return StreamBuilder<List<Booking>>(
+      stream: FirestoreService().getAdminBookings('completed'),
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return const Center(child: CircularProgressIndicator());
+        }
+        
+        final bookings = snapshot.data ?? [];
+        
+        if (bookings.isEmpty) {
+          return const Center(child: Text("No completed bookings yet"));
+        }
+        
+        return ListView.builder(
+          padding: const EdgeInsets.all(16.0),
+          itemCount: bookings.length,
+          itemBuilder: (context, index) {
+            final b = bookings[index];
+            return _buildQueueItem(
+              bookingId: b.id,
+              name: b.customerName,
+              service: b.serviceName,
+              waitTime: 'Completed',
+              isWalkIn: false,
+              actionLabel: 'View Receipt',
+              actionColor: AppColors.textSecondary,
+              onActionPressed: () {
+                // Show receipt logic
+              },
+            );
+          },
+        );
+      },
     );
   }
 
   Widget _buildQueueItem({
+    required String bookingId,
     required String name,
     required String service,
     required String waitTime,
@@ -106,6 +160,7 @@ class AdminQueueScreen extends StatelessWidget {
     String? appointmentTime,
     required String actionLabel,
     required Color actionColor,
+    required VoidCallback onActionPressed,
   }) {
     return Card(
       margin: const EdgeInsets.only(bottom: 12),
@@ -168,7 +223,7 @@ class AdminQueueScreen extends StatelessWidget {
             SizedBox(
               width: double.infinity,
               child: OutlinedButton(
-                onPressed: () {},
+                onPressed: onActionPressed,
                 style: OutlinedButton.styleFrom(
                   foregroundColor: actionColor,
                   side: BorderSide(color: actionColor),
