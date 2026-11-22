@@ -156,12 +156,21 @@ class AdminBookingsScreen extends StatelessWidget {
                     Text(payment, style: const TextStyle(fontWeight: FontWeight.bold, color: AppColors.success)),
                   ],
                 ),
-                Row(
-                  children: [
-                    IconButton(icon: const Icon(Icons.edit, color: AppColors.primary), onPressed: (){}),
-                    IconButton(icon: const Icon(Icons.cancel_outlined, color: AppColors.error), onPressed: (){}),
-                  ],
-                )
+                if (status != 'COMPLETED' && status != 'CANCELLED')
+                  Row(
+                    children: [
+                      IconButton(
+                        icon: const Icon(Icons.check_circle_outline, color: AppColors.success),
+                        tooltip: 'Mark Completed',
+                        onPressed: () => FirestoreService().updateBookingStatus(id, 'completed'),
+                      ),
+                      IconButton(
+                        icon: const Icon(Icons.cancel_outlined, color: AppColors.error),
+                        tooltip: 'Cancel Booking',
+                        onPressed: () => FirestoreService().updateBookingStatus(id, 'cancelled'),
+                      ),
+                    ],
+                  )
               ],
             )
           ],

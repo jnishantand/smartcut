@@ -16,6 +16,23 @@ class FirestoreService {
             .toList());
   }
 
+  Stream<List<SalonService>> getAllServices() {
+    return _db
+        .collection('services')
+        .snapshots()
+        .map((snapshot) => snapshot.docs
+            .map((doc) => SalonService.fromFirestore(doc))
+            .toList());
+  }
+
+  Future<void> addService(SalonService service) async {
+    await _db.collection('services').add(service.toMap());
+  }
+
+  Future<void> updateService(String id, Map<String, dynamic> data) async {
+    await _db.collection('services').doc(id).update(data);
+  }
+
   Future<void> seedSampleServices() async {
     final batch = _db.batch();
     

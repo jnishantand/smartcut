@@ -42,12 +42,16 @@ class _SignUpScreenState extends State<SignUpScreen> {
     try {
       final user = FirebaseAuth.instance.currentUser;
       if (user != null) {
+        final phone = _phoneController.text.trim();
+        final isAdmin = phone.contains('9424894244') || (widget.phoneNumber.contains('9424894244'));
+        final role = isAdmin ? 'admin' : 'customer';
+
         // Save complete profile to Firestore
         await FirebaseFirestore.instance.collection('users').doc(user.uid).set({
-          'phoneNumber': _phoneController.text.trim(),
-          'name': _nameController.text.trim(),
+          'phoneNumber': phone,
+          'name': _nameController.text.trim().isEmpty ? (isAdmin ? 'Salon Admin' : 'Customer') : _nameController.text.trim(),
           'email': _emailController.text.trim(),
-          'role': 'customer',
+          'role': role,
           'createdAt': FieldValue.serverTimestamp(),
           'notificationSettings': {
             'bookingUpdates': true,
