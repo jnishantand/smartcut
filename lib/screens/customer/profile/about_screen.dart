@@ -1,8 +1,36 @@
 import 'package:flutter/material.dart';
+import 'package:url_launcher/url_launcher.dart';
 import '../../../theme/app_colors.dart';
 
 class AboutScreen extends StatelessWidget {
   const AboutScreen({super.key});
+
+  Future<void> _openMap() async {
+    final Uri url = Uri.parse('https://www.google.com/maps/search/?api=1&query=247,+near+HDFC+Bank,+Scheme+No+171,+Indore,+Madhya+Pradesh+452010');
+    try {
+      await launchUrl(url, mode: LaunchMode.externalApplication);
+    } catch (e) {
+      debugPrint('Could not launch maps: $e');
+    }
+  }
+
+  Future<void> _openPhone() async {
+    final Uri url = Uri.parse('tel:09752315472');
+    try {
+      await launchUrl(url);
+    } catch (e) {
+      debugPrint('Could not launch phone: $e');
+    }
+  }
+
+  Future<void> _openEmail() async {
+    final Uri url = Uri.parse('mailto:support@smartcut.com');
+    try {
+      await launchUrl(url);
+    } catch (e) {
+      debugPrint('Could not launch email: $e');
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -77,30 +105,69 @@ class AboutScreen extends StatelessWidget {
               borderRadius: BorderRadius.circular(16),
               border: Border.all(color: AppColors.border),
             ),
-            child: const Column(
+            child: Column(
               children: [
-                Row(
-                  children: [
-                    Icon(Icons.location_on_outlined, color: AppColors.primary),
-                    SizedBox(width: 12),
-                    Expanded(child: Text('123 Main Street, Downtown Cityville', style: TextStyle(fontSize: 14))),
-                  ],
+                InkWell(
+                  onTap: _openMap,
+                  borderRadius: BorderRadius.circular(8),
+                  child: const Padding(
+                    padding: EdgeInsets.symmetric(vertical: 4.0),
+                    child: Row(
+                      children: [
+                        Icon(Icons.location_on_outlined, color: AppColors.primary),
+                        SizedBox(width: 12),
+                        Expanded(
+                          child: Text(
+                            '247, near HDFC Bank, Scheme No 171, Indore, Madhya Pradesh 452010',
+                            style: TextStyle(fontSize: 14, color: AppColors.primary, decoration: TextDecoration.underline),
+                          ),
+                        ),
+                        Icon(Icons.open_in_new, size: 16, color: AppColors.textSecondary),
+                      ],
+                    ),
+                  ),
                 ),
-                Divider(height: 24),
-                Row(
-                  children: [
-                    Icon(Icons.phone_outlined, color: AppColors.primary),
-                    SizedBox(width: 12),
-                    Expanded(child: Text('+1 (800) 555-SMART', style: TextStyle(fontSize: 14))),
-                  ],
+                const Divider(height: 24),
+                InkWell(
+                  onTap: _openPhone,
+                  borderRadius: BorderRadius.circular(8),
+                  child: const Padding(
+                    padding: EdgeInsets.symmetric(vertical: 4.0),
+                    child: Row(
+                      children: [
+                        Icon(Icons.phone_outlined, color: AppColors.primary),
+                        SizedBox(width: 12),
+                        Expanded(
+                          child: Text(
+                            '09752315472',
+                            style: TextStyle(fontSize: 14, color: AppColors.primary, fontWeight: FontWeight.bold),
+                          ),
+                        ),
+                        Icon(Icons.call, size: 18, color: AppColors.primary),
+                      ],
+                    ),
+                  ),
                 ),
-                Divider(height: 24),
-                Row(
-                  children: [
-                    Icon(Icons.email_outlined, color: AppColors.primary),
-                    SizedBox(width: 12),
-                    Expanded(child: Text('support@smartcut.com', style: TextStyle(fontSize: 14))),
-                  ],
+                const Divider(height: 24),
+                InkWell(
+                  onTap: _openEmail,
+                  borderRadius: BorderRadius.circular(8),
+                  child: const Padding(
+                    padding: EdgeInsets.symmetric(vertical: 4.0),
+                    child: Row(
+                      children: [
+                        Icon(Icons.email_outlined, color: AppColors.primary),
+                        SizedBox(width: 12),
+                        Expanded(
+                          child: Text(
+                            'support@smartcut.com',
+                            style: TextStyle(fontSize: 14, color: AppColors.primary),
+                          ),
+                        ),
+                        Icon(Icons.mail_outline, size: 18, color: AppColors.primary),
+                      ],
+                    ),
+                  ),
                 ),
               ],
             ),

@@ -29,7 +29,7 @@ class FaqScreen extends StatelessWidget {
       },
       {
         'q': 'Where is SmartCut Salon located?',
-        'a': 'SmartCut Salon is located at 123 Main Street, Downtown. You can view our exact location and contact details on the "About SmartCut" page.'
+        'a': 'SmartCut Salon is located at 247, near HDFC Bank, Scheme No 171, Indore, Madhya Pradesh 452010, Downtown. You can view our exact location and contact details on the "About SmartCut" page.'
       },
     ];
 
