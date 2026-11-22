@@ -34,4 +34,16 @@ class SalonService {
       isActive: data['isActive'] ?? true,
     );
   }
+
+  Map<String, dynamic> toMap() {
+    return {
+      'name': name,
+      'category': category,
+      'durationMinutes': durationMinutes,
+      'price': price,
+      'advanceRequired': advanceRequired,
+      'imageUrl': imageUrl,
+      'isActive': isActive,
+    };
+  }
 }
