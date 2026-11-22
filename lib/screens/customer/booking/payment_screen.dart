@@ -101,36 +101,39 @@ class _PaymentScreenState extends State<PaymentScreen> {
   }
 
   Widget _buildBottomBar(double amount) {
-    return Container(
-      padding: const EdgeInsets.all(24),
-      decoration: BoxDecoration(
-        color: AppColors.surface,
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.05),
-            blurRadius: 10,
-            offset: const Offset(0, -5),
-          ),
-        ],
-      ),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          ElevatedButton(
-            onPressed: _isProcessing ? null : _processPayment,
-            style: ElevatedButton.styleFrom(
-              minimumSize: const Size(double.infinity, 56),
+    return SafeArea(
+      top: false,
+      child: Container(
+        padding: const EdgeInsets.all(24),
+        decoration: BoxDecoration(
+          color: AppColors.surface,
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.05),
+              blurRadius: 10,
+              offset: const Offset(0, -5),
             ),
-            child: _isProcessing 
-              ? const CircularProgressIndicator(color: Colors.white)
-              : Text('Pay ₹${amount.toStringAsFixed(2)} via Razorpay'),
-          ),
-          const SizedBox(height: 8),
-          TextButton(
-            onPressed: _isProcessing ? null : () => _handlePaymentSuccess(null),
-            child: const Text('Simulate Test Payment (Bypass)', style: TextStyle(color: AppColors.textSecondary, fontSize: 12)),
-          ),
-        ],
+          ],
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            ElevatedButton(
+              onPressed: _isProcessing ? null : _processPayment,
+              style: ElevatedButton.styleFrom(
+                minimumSize: const Size(double.infinity, 56),
+              ),
+              child: _isProcessing 
+                ? const CircularProgressIndicator(color: Colors.white)
+                : Text('Pay ₹${amount.toStringAsFixed(2)} via Razorpay'),
+            ),
+            const SizedBox(height: 8),
+            TextButton(
+              onPressed: _isProcessing ? null : () => _handlePaymentSuccess(null),
+              child: const Text('Simulate Test Payment (Bypass)', style: TextStyle(color: AppColors.textSecondary, fontSize: 12)),
+            ),
+          ],
+        ),
       ),
     );
   }

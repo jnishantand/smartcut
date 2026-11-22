@@ -150,29 +150,32 @@ class BookingSummaryScreen extends StatelessWidget {
   }
 
   Widget _buildBottomBar(BuildContext context, double advanceRequired) {
-    return Container(
-      padding: const EdgeInsets.all(24),
-      decoration: BoxDecoration(
-        color: AppColors.surface,
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.05),
-            blurRadius: 10,
-            offset: const Offset(0, -5),
-          ),
-        ],
-      ),
-      child: ElevatedButton(
-        onPressed: () {
-          Navigator.push(
-            context, 
-            MaterialPageRoute(builder: (_) => const PaymentScreen())
-          );
-        },
-        style: ElevatedButton.styleFrom(
-          minimumSize: const Size(double.infinity, 56),
+    return SafeArea(
+      top: false,
+      child: Container(
+        padding: const EdgeInsets.all(24),
+        decoration: BoxDecoration(
+          color: AppColors.surface,
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.05),
+              blurRadius: 10,
+              offset: const Offset(0, -5),
+            ),
+          ],
         ),
-        child: Text('Proceed to Pay ₹${advanceRequired.toStringAsFixed(2)}'),
+        child: ElevatedButton(
+          onPressed: () {
+            Navigator.push(
+              context, 
+              MaterialPageRoute(builder: (_) => const PaymentScreen())
+            );
+          },
+          style: ElevatedButton.styleFrom(
+            minimumSize: const Size(double.infinity, 56),
+          ),
+          child: Text('Proceed to Pay ₹${advanceRequired.toStringAsFixed(2)}'),
+        ),
       ),
     );
   }

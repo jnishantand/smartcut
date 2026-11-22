@@ -295,34 +295,37 @@ class _TimeSelectionScreenState extends State<TimeSelectionScreen> {
   }
 
   Widget _buildBottomBar() {
-    return Container(
-      padding: const EdgeInsets.all(24),
-      decoration: BoxDecoration(
-        color: AppColors.surface,
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.05),
-            blurRadius: 10,
-            offset: const Offset(0, -5),
-          ),
-        ],
-      ),
-      child: ElevatedButton(
-        onPressed: _selectedTime == null
-            ? null
-            : () {
-                final bookingDate = _selectedDate;
-                context.read<BookingProvider>().selectDateTime(bookingDate, _selectedTime!);
-
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (_) => const BookingSummaryScreen()),
-                );
-              },
-        style: ElevatedButton.styleFrom(
-          minimumSize: const Size(double.infinity, 56),
+    return SafeArea(
+      top: false,
+      child: Container(
+        padding: const EdgeInsets.all(24),
+        decoration: BoxDecoration(
+          color: AppColors.surface,
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.05),
+              blurRadius: 10,
+              offset: const Offset(0, -5),
+            ),
+          ],
         ),
-        child: const Text('Continue to Summary'),
+        child: ElevatedButton(
+          onPressed: _selectedTime == null
+              ? null
+              : () {
+                  final bookingDate = _selectedDate;
+                  context.read<BookingProvider>().selectDateTime(bookingDate, _selectedTime!);
+
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (_) => const BookingSummaryScreen()),
+                  );
+                },
+          style: ElevatedButton.styleFrom(
+            minimumSize: const Size(double.infinity, 56),
+          ),
+          child: const Text('Continue to Summary'),
+        ),
       ),
     );
   }

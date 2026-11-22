@@ -68,22 +68,25 @@ class BookingConfirmationScreen extends StatelessWidget {
                 ),
               ),
             ),
-            Padding(
-              padding: const EdgeInsets.all(24.0),
-              child: ElevatedButton(
-                onPressed: () {
-                  Navigator.pushAndRemoveUntil(
-                    context, 
-                    MaterialPageRoute(builder: (_) => const CustomerMainScreen()),
-                    (route) => false,
-                  );
-                },
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.white,
-                  foregroundColor: AppColors.primary,
-                  minimumSize: const Size(double.infinity, 56),
+            SafeArea(
+              top: false,
+              child: Padding(
+                padding: const EdgeInsets.all(24.0),
+                child: ElevatedButton(
+                  onPressed: () {
+                    Navigator.pushAndRemoveUntil(
+                      context, 
+                      MaterialPageRoute(builder: (_) => const CustomerMainScreen()),
+                      (route) => false,
+                    );
+                  },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.white,
+                    foregroundColor: AppColors.primary,
+                    minimumSize: const Size(double.infinity, 56),
+                  ),
+                  child: const Text('Return to Home'),
                 ),
-                child: const Text('Return to Home'),
               ),
             ),
           ],
