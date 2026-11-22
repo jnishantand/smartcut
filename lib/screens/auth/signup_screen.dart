@@ -19,6 +19,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
   final _formKey = GlobalKey<FormState>();
   final _nameController = TextEditingController();
   final _emailController = TextEditingController();
+  final _phoneController = TextEditingController();
   bool _isLoading = false;
 
   @override
@@ -26,6 +27,9 @@ class _SignUpScreenState extends State<SignUpScreen> {
     super.initState();
     if (widget.name != null) _nameController.text = widget.name!;
     if (widget.email != null) _emailController.text = widget.email!;
+    if (widget.phoneNumber.isNotEmpty) {
+      _phoneController.text = widget.phoneNumber;
+    }
   }
 
   Future<void> _completeSignUp() async {
@@ -38,7 +42,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
       if (user != null) {
         // Save complete profile to Firestore
         await FirebaseFirestore.instance.collection('users').doc(user.uid).set({
-          'phoneNumber': widget.phoneNumber,
+          'phoneNumber': _phoneController.text.trim(),
           'name': _nameController.text.trim(),
           'email': _emailController.text.trim(),
           'role': 'customer',
@@ -130,12 +134,20 @@ class _SignUpScreenState extends State<SignUpScreen> {
                 const SizedBox(height: 24),
                 
                 TextFormField(
-                  initialValue: widget.phoneNumber,
+                  controller: _phoneController,
                   decoration: const InputDecoration(
                     labelText: 'Phone Number',
                     prefixIcon: Icon(Icons.phone),
+                    hintText: '+1 234 567 8900',
                   ),
-                  enabled: false, // Locked to what they verified
+                  keyboardType: TextInputType.phone,
+                  enabled: widget.phoneNumber.isEmpty, // Only editable if not verified via Phone Auth
+                  validator: (value) {
+                    if (value == null || value.trim().isEmpty) {
+                      return 'Please enter your phone number';
+                    }
+                    return null;
+                  },
                 ),
                 const SizedBox(height: 48),
                 
