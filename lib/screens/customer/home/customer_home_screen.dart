@@ -9,6 +9,7 @@ import '../../../services/firestore_service.dart';
 import '../../../models/salon_service.dart';
 import '../../../models/booking.dart';
 import '../../../providers/booking_provider.dart';
+import '../../notifications/notification_history_screen.dart';
 import '../booking/service_selection_screen.dart';
 import '../booking/staff_selection_screen.dart';
 
@@ -76,13 +77,28 @@ class CustomerHomeScreen extends StatelessWidget {
                   ),
                 ],
               ),
-              CircleAvatar(
-                radius: 24,
-                backgroundColor: AppColors.secondary,
-                child: Text(
-                  isLoading || name.isEmpty ? '?' : name[0].toUpperCase(), 
-                  style: const TextStyle(color: AppColors.primary, fontWeight: FontWeight.bold, fontSize: 20)
-                ),
+              Row(
+                children: [
+                  IconButton(
+                    icon: const Icon(Icons.notifications_outlined, color: AppColors.primary, size: 28),
+                    tooltip: 'Notifications',
+                    onPressed: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(builder: (_) => const NotificationHistoryScreen()),
+                      );
+                    },
+                  ),
+                  const SizedBox(width: 8),
+                  CircleAvatar(
+                    radius: 24,
+                    backgroundColor: AppColors.secondary,
+                    child: Text(
+                      isLoading || name.isEmpty ? '?' : name[0].toUpperCase(), 
+                      style: const TextStyle(color: AppColors.primary, fontWeight: FontWeight.bold, fontSize: 20)
+                    ),
+                  ),
+                ],
               ),
             ],
           ),

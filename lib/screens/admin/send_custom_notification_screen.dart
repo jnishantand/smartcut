@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:cloud_functions/cloud_functions.dart';
 
 class SendCustomNotificationScreen extends StatefulWidget {
@@ -26,18 +27,34 @@ class _SendCustomNotificationScreenState
     });
 
     try {
-      // Call Firebase Cloud Function
-      HttpsCallable callable = FirebaseFunctions.instance.httpsCallable('sendAdminNotification');
-      
-      await callable.call(<String, dynamic>{
-        'title': _titleController.text,
-        'body': _bodyController.text,
-        'audience': _audienceType,
+      final title = _titleController.text.trim();
+      final body = _bodyController.text.trim();
+      final type = _audienceType == 'all' ? 'announcement' : 'promotion';
+
+      // 1. Write to Firestore 'notifications' collection for ALL users to see in real-time
+      await FirebaseFirestore.instance.collection('notifications').add({
+        'title': title,
+        'body': body,
+        'type': type,
+        'userId': 'all', // Broadcast to all customer devices
+        'createdAt': FieldValue.serverTimestamp(),
       });
+
+      // 2. Optionally trigger Cloud Function if deployed
+      try {
+        HttpsCallable callable = FirebaseFunctions.instance.httpsCallable('sendAdminNotification');
+        await callable.call(<String, dynamic>{
+          'title': title,
+          'body': body,
+          'audience': _audienceType,
+        });
+      } catch (cfError) {
+        debugPrint('Cloud Function trigger notice: $cfError');
+      }
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Notification sent successfully')),
+          const SnackBar(content: Text('Notification broadcast sent to all customers!')),
         );
         Navigator.pop(context);
       }

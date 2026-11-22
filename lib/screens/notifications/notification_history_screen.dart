@@ -20,7 +20,7 @@ class NotificationHistoryScreen extends StatelessWidget {
       body: StreamBuilder<QuerySnapshot>(
         stream: FirebaseFirestore.instance
             .collection('notifications')
-            .where('userId', isEqualTo: user.uid)
+            .where('userId', whereIn: [user.uid, 'all'])
             .orderBy('createdAt', descending: true)
             .snapshots(),
         builder: (context, snapshot) {
