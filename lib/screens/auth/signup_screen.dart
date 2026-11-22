@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:provider/provider.dart';
 import '../../theme/app_colors.dart';
+import '../../providers/user_provider.dart';
 import '../customer/customer_main_screen.dart';
 
 class SignUpScreen extends StatefulWidget {
@@ -55,13 +57,9 @@ class _SignUpScreenState extends State<SignUpScreen> {
           }
         });
 
-        // Navigate to Customer Home
+        // Refresh provider profile state so AuthWrapper automatically transitions
         if (mounted) {
-          Navigator.pushAndRemoveUntil(
-            context,
-            MaterialPageRoute(builder: (_) => const CustomerMainScreen()),
-            (route) => false,
-          );
+          await context.read<UserProvider>().refreshProfile();
         }
       }
     } catch (e) {
