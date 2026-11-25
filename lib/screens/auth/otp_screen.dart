@@ -123,7 +123,7 @@ class _OtpScreenState extends State<OtpScreen> {
         title: const Text('Verify Phone'),
       ),
       body: SafeArea(
-        child: Padding(
+        child: SingleChildScrollView(
           padding: const EdgeInsets.all(32.0),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
