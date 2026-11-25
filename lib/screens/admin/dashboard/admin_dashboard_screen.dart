@@ -4,10 +4,12 @@ import '../../../theme/app_colors.dart';
 import '../../../widgets/status_badge.dart';
 import '../../../services/firestore_service.dart';
 import '../../../models/booking.dart';
+import '../../../widgets/booking_details_dialog.dart';
 import '../staff/admin_staff_screen.dart';
 import '../services/admin_services_screen.dart';
 import '../admin_notification_management_screen.dart';
 import '../settings/admin_settings_screen.dart';
+import '../bookings/admin_bookings_screen.dart';
 
 class AdminDashboardScreen extends StatefulWidget {
   const AdminDashboardScreen({super.key});
@@ -344,7 +346,12 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Text('Next Appointments', style: Theme.of(context).textTheme.titleLarge),
-              TextButton(onPressed: (){}, child: const Text('View All'))
+              TextButton(
+                onPressed: () {
+                  Navigator.push(context, MaterialPageRoute(builder: (_) => const AdminBookingsScreen()));
+                }, 
+                child: const Text('View All'),
+              ),
             ],
           ),
           const SizedBox(height: 8),
@@ -358,7 +365,10 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
               var bookings = snapshot.data ?? [];
               
               if (bookings.isEmpty) {
-                return const Text('No upcoming appointments.', style: TextStyle(color: AppColors.textSecondary));
+                return const Padding(
+                  padding: EdgeInsets.symmetric(vertical: 16.0),
+                  child: Text('No upcoming appointments.', style: TextStyle(color: AppColors.textSecondary)),
+                );
               }
 
               // Show only the next 3 appointments for the dashboard
@@ -367,13 +377,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
               }
 
               return Column(
-                children: bookings.map((b) => _buildAppointmentTile(
-                  context, 
-                  b.customerName, 
-                  b.serviceName, 
-                  b.timeSlot, 
-                  'Confirmed'
-                )).toList(),
+                children: bookings.map((b) => _buildAppointmentTile(context, b)).toList(),
               );
             }
           ),
@@ -383,37 +387,41 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
     );
   }
 
-  Widget _buildAppointmentTile(BuildContext context, String name, String service, String time, String status) {
+  Widget _buildAppointmentTile(BuildContext context, Booking booking) {
     return Card(
       margin: const EdgeInsets.only(bottom: 12),
-      child: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Row(
-          children: [
-            Container(
-              padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(
-                color: AppColors.secondary,
-                borderRadius: BorderRadius.circular(12),
+      child: InkWell(
+        onTap: () => showBookingDetailsDialog(context, booking),
+        borderRadius: BorderRadius.circular(12),
+        child: Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: AppColors.secondary,
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Text(
+                  booking.timeSlot.split(' ')[0], 
+                  style: const TextStyle(fontWeight: FontWeight.bold, color: AppColors.primary)
+                ),
               ),
-              child: Text(
-                time.split(' ')[0], 
-                style: const TextStyle(fontWeight: FontWeight.bold, color: AppColors.primary)
+              const SizedBox(width: 16),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(booking.customerName, style: Theme.of(context).textTheme.titleMedium),
+                    const SizedBox(height: 4),
+                    Text('${booking.serviceName} • ${booking.staffName}', style: Theme.of(context).textTheme.bodyMedium),
+                  ],
+                ),
               ),
-            ),
-            const SizedBox(width: 16),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(name, style: Theme.of(context).textTheme.titleMedium),
-                  const SizedBox(height: 4),
-                  Text(service, style: Theme.of(context).textTheme.bodyMedium),
-                ],
-              ),
-            ),
-            StatusBadge(status: status == 'Available' ? SalonStatus.available : SalonStatus.busy),
-          ],
+              const StatusBadge(status: SalonStatus.available),
+            ],
+          ),
         ),
       ),
     );
