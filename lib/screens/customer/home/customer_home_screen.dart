@@ -9,6 +9,7 @@ import '../../../services/firestore_service.dart';
 import '../../../models/salon_service.dart';
 import '../../../models/booking.dart';
 import '../../../providers/booking_provider.dart';
+import '../../../widgets/booking_details_dialog.dart';
 import '../../notifications/notification_history_screen.dart';
 import '../booking/service_selection_screen.dart';
 import '../booking/staff_selection_screen.dart';
@@ -356,40 +357,44 @@ class CustomerHomeScreen extends StatelessWidget {
                 children: [
                   Text('Upcoming Appointment', style: Theme.of(context).textTheme.titleLarge),
                   const SizedBox(height: 16),
-                  Container(
-                    padding: const EdgeInsets.all(16),
-                    decoration: BoxDecoration(
-                      color: AppColors.secondary,
-                      borderRadius: BorderRadius.circular(16),
-                    ),
-                    child: Row(
-                      children: [
-                        Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                          decoration: BoxDecoration(
-                            color: AppColors.primary,
-                            borderRadius: BorderRadius.circular(12),
+                  InkWell(
+                    onTap: () => showBookingDetailsDialog(context, nextBooking),
+                    borderRadius: BorderRadius.circular(16),
+                    child: Container(
+                      padding: const EdgeInsets.all(16),
+                      decoration: BoxDecoration(
+                        color: AppColors.secondary,
+                        borderRadius: BorderRadius.circular(16),
+                      ),
+                      child: Row(
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                            decoration: BoxDecoration(
+                              color: AppColors.primary,
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            child: Column(
+                              children: [
+                                Text('${nextBooking.appointmentDate.day}', style: Theme.of(context).textTheme.titleLarge?.copyWith(color: Colors.white)),
+                                Text(monthNames[nextBooking.appointmentDate.month - 1], style: Theme.of(context).textTheme.labelLarge),
+                              ],
+                            ),
                           ),
-                          child: Column(
-                            children: [
-                              Text('${nextBooking.appointmentDate.day}', style: Theme.of(context).textTheme.titleLarge?.copyWith(color: Colors.white)),
-                              Text(monthNames[nextBooking.appointmentDate.month - 1], style: Theme.of(context).textTheme.labelLarge),
-                            ],
+                          const SizedBox(width: 16),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(nextBooking.serviceName, style: Theme.of(context).textTheme.titleMedium),
+                                const SizedBox(height: 4),
+                                Text(nextBooking.timeSlot, style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: AppColors.primary)),
+                              ],
+                            ),
                           ),
-                        ),
-                        const SizedBox(width: 16),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(nextBooking.serviceName, style: Theme.of(context).textTheme.titleMedium),
-                              const SizedBox(height: 4),
-                              Text(nextBooking.timeSlot, style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: AppColors.primary)),
-                            ],
-                          ),
-                        ),
-                        const Icon(Icons.arrow_forward_ios, size: 16, color: AppColors.primary),
-                      ],
+                          const Icon(Icons.arrow_forward_ios, size: 16, color: AppColors.primary),
+                        ],
+                      ),
                     ),
                   ),
                   const SizedBox(height: 40),
