@@ -47,32 +47,56 @@ class AdminNotificationManagementScreen extends StatelessWidget {
               child: StreamBuilder<QuerySnapshot>(
                 stream: FirebaseFirestore.instance
                     .collection('notifications')
-                    .where('type', whereIn: ['promotion', 'announcement'])
                     .orderBy('createdAt', descending: true)
-                    .limit(20)
+                    .limit(50)
                     .snapshots(),
                 builder: (context, snapshot) {
                   if (snapshot.connectionState == ConnectionState.waiting) {
                     return const Center(child: CircularProgressIndicator());
                   }
                   if (snapshot.hasError) {
-                    return Text('Error: ${snapshot.error}');
+                    return Center(child: Text('Error: ${snapshot.error}'));
                   }
-                  if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
-                    return const Text('No recent broadcasts.');
+
+                  final docs = snapshot.data?.docs ?? [];
+                  // Filter for broadcast announcements or promotions
+                  final broadcastDocs = docs.where((doc) {
+                    final data = doc.data() as Map<String, dynamic>;
+                    final type = data['type'] as String?;
+                    final userId = data['userId'] as String?;
+                    return type == 'promotion' || type == 'announcement' || userId == 'all';
+                  }).toList();
+
+                  if (broadcastDocs.isEmpty) {
+                    return const Center(child: Text('No recent broadcasts found.'));
                   }
 
                   return ListView.builder(
-                    itemCount: snapshot.data!.docs.length,
+                    itemCount: broadcastDocs.length,
                     itemBuilder: (context, index) {
-                      final doc = snapshot.data!.docs[index];
+                      final doc = broadcastDocs[index];
                       final data = doc.data() as Map<String, dynamic>;
                       
                       return Card(
+                        margin: const EdgeInsets.only(bottom: 12),
                         child: ListTile(
-                          title: Text(data['title'] ?? ''),
+                          leading: Icon(
+                            data['type'] == 'promotion' ? Icons.local_offer : Icons.campaign,
+                            color: data['type'] == 'promotion' ? Colors.red : Colors.purple,
+                          ),
+                          title: Text(data['title'] ?? '', style: const TextStyle(fontWeight: FontWeight.bold)),
                           subtitle: Text(data['body'] ?? ''),
-                          trailing: Text(data['type'] ?? ''),
+                          trailing: Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                            decoration: BoxDecoration(
+                              color: Colors.grey.withOpacity(0.15),
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            child: Text(
+                              (data['type'] ?? 'broadcast').toUpperCase(),
+                              style: const TextStyle(fontSize: 11, fontWeight: FontWeight.bold),
+                            ),
+                          ),
                         ),
                       );
                     },
