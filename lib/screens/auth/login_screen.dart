@@ -102,76 +102,89 @@ class _LoginScreenState extends State<LoginScreen> {
       body: GestureDetector(
         onTap: () => FocusScope.of(context).unfocus(),
         child: SafeArea(
-          child: SingleChildScrollView(
-            padding: const EdgeInsets.all(32.0),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                ClipRRect(
-                  borderRadius: BorderRadius.circular(20),
-                  child: Image.asset(
-                    'assets/images/app_icon.png',
-                    width: 80,
-                    height: 80,
+          child: LayoutBuilder(
+            builder: (context, constraints) {
+              return SingleChildScrollView(
+                child: ConstrainedBox(
+                  constraints: BoxConstraints(
+                    minHeight: constraints.maxHeight,
                   ),
-                ),
-                const SizedBox(height: 24),
-                Text(
-                  'Welcome to SmartCut',
-                  style: Theme.of(context).textTheme.displayLarge,
-                ),
-                const SizedBox(height: 8),
-                Text(
-                  'Sign in to book your next appointment or manage your salon.',
-                  style: Theme.of(context).textTheme.bodyLarge?.copyWith(color: AppColors.textSecondary),
-                ),
-                const SizedBox(height: 48),
+                  child: IntrinsicHeight(
+                    child: Padding(
+                      padding: const EdgeInsets.all(32.0),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          ClipRRect(
+                            borderRadius: BorderRadius.circular(20),
+                            child: Image.asset(
+                              'assets/images/app_icon.png',
+                              width: 80,
+                              height: 80,
+                            ),
+                          ),
+                          const SizedBox(height: 24),
+                          Text(
+                            'Welcome to SmartCut',
+                            style: Theme.of(context).textTheme.displayLarge,
+                          ),
+                          const SizedBox(height: 8),
+                          Text(
+                            'Sign in to book your next appointment or manage your salon.',
+                            style: Theme.of(context).textTheme.bodyLarge?.copyWith(color: AppColors.textSecondary),
+                          ),
+                          const SizedBox(height: 48),
 
-                TextField(
-                  controller: _phoneController,
-                  decoration: const InputDecoration(
-                    labelText: 'Phone Number',
-                    prefixIcon: Icon(Icons.phone),
-                    hintText: '+1 234 567 8900',
-                  ),
-                  keyboardType: TextInputType.phone,
-                ),
-                const SizedBox(height: 24),
+                          TextField(
+                            controller: _phoneController,
+                            decoration: const InputDecoration(
+                              labelText: 'Phone Number',
+                              prefixIcon: Icon(Icons.phone),
+                              hintText: '+1 234 567 8900',
+                            ),
+                            keyboardType: TextInputType.phone,
+                          ),
+                          const SizedBox(height: 24),
 
-                ElevatedButton(
-                  onPressed: _isLoading ? null : _verifyPhone,
-                  style: ElevatedButton.styleFrom(
-                    minimumSize: const Size(double.infinity, 56),
-                  ),
-                  child: _isLoading
-                      ? const CircularProgressIndicator(color: Colors.white)
-                      : const Text('Send OTP'),
-                ),
-                const SizedBox(height: 32),
+                          ElevatedButton(
+                            onPressed: _isLoading ? null : _verifyPhone,
+                            style: ElevatedButton.styleFrom(
+                              minimumSize: const Size(double.infinity, 56),
+                            ),
+                            child: _isLoading
+                                ? const CircularProgressIndicator(color: Colors.white)
+                                : const Text('Send OTP'),
+                          ),
+                          const SizedBox(height: 32),
 
-                const Row(
-                  children: [
-                    Expanded(child: Divider()),
-                    Padding(
-                      padding: EdgeInsets.symmetric(horizontal: 16.0),
-                      child: Text('OR', style: TextStyle(color: AppColors.textSecondary, fontSize: 12)),
+                          const Row(
+                            children: [
+                              Expanded(child: Divider()),
+                              Padding(
+                                padding: EdgeInsets.symmetric(horizontal: 16.0),
+                                child: Text('OR', style: TextStyle(color: AppColors.textSecondary, fontSize: 12)),
+                              ),
+                              Expanded(child: Divider()),
+                            ],
+                          ),
+                          const SizedBox(height: 24),
+
+                          OutlinedButton.icon(
+                            onPressed: _isLoading ? null : _signInWithGoogle,
+                            icon: const Icon(Icons.account_circle, color: AppColors.primary),
+                            label: const Text('Continue with Google'),
+                            style: OutlinedButton.styleFrom(
+                              minimumSize: const Size(double.infinity, 56),
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
-                    Expanded(child: Divider()),
-                  ],
-                ),
-                const SizedBox(height: 24),
-
-                OutlinedButton.icon(
-                  onPressed: _isLoading ? null : _signInWithGoogle,
-                  icon: const Icon(Icons.account_circle, color: AppColors.primary),
-                  label: const Text('Continue with Google'),
-                  style: OutlinedButton.styleFrom(
-                    minimumSize: const Size(double.infinity, 56),
                   ),
                 ),
-              ],
-            ),
+              );
+            },
           ),
         ),
       ),
