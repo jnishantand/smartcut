@@ -66,11 +66,6 @@ class CustomerProfileScreen extends StatelessWidget {
                 style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: AppColors.textSecondary),
               ),
             ],
-            const SizedBox(height: 16),
-            OutlinedButton(
-              onPressed: () {},
-              child: const Text('Edit Profile'),
-            ),
           ],
         );
       }
