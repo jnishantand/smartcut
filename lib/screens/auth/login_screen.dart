@@ -99,7 +99,10 @@ class _LoginScreenState extends State<LoginScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: SafeArea(
+      body: GestureDetector(onTap: (){
+        FocusScope.of(context).unfocus();
+
+      },child: SafeArea(
         child: Padding(
           padding: const EdgeInsets.all(32.0),
           child: Column(
@@ -171,7 +174,7 @@ class _LoginScreenState extends State<LoginScreen> {
             ],
           ),
         ),
-      ),
+      ),),
     );
   }
 }
