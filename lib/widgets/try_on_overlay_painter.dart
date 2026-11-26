@@ -15,6 +15,7 @@ class TryOnOverlayPainter extends CustomPainter {
   final double userOffsetY;
   final double userRotation;
   final bool isMirrored;
+  final Color hairColor;
 
   TryOnOverlayPainter({
     required this.face,
@@ -27,6 +28,7 @@ class TryOnOverlayPainter extends CustomPainter {
     this.userOffsetY = 0.0,
     this.userRotation = 0.0,
     this.isMirrored = false,
+    this.hairColor = const Color(0xFF2B1D19),
   });
 
   @override
@@ -45,11 +47,15 @@ class TryOnOverlayPainter extends CustomPainter {
 
     final double rollAngle = ((face!.headEulerAngleZ ?? 0) * math.pi / 180) + (userRotation * math.pi / 180);
 
-    // 1. Draw Hairstyle Overlay
+    // 1. SKIN CLEARING & BLENDING LAYER (Erases/blends existing hair & beard with natural skin mask)
+    if (hairStyle != null || beardStyle != null) {
+      _drawSkinClearingMask(canvas, faceCenterX, faceCenterY, faceWidth, faceHeight, rollAngle);
+    }
+
+    // 2. Draw Realistic Hairstyle Overlay
     if (hairStyle != null) {
       canvas.save();
 
-      // Hair Anchor Point: Forehead / Top of face
       final double hairX = faceCenterX;
       final double hairY = faceCenterY + (hairStyle!.verticalOffset * faceHeight) + (userOffsetY * faceHeight);
 
@@ -57,30 +63,26 @@ class TryOnOverlayPainter extends CustomPainter {
       canvas.rotate(rollAngle);
 
       final double hairWidth = faceWidth * hairStyle!.scaleFactor * userScale * 1.35;
-      final double hairHeight = hairWidth * 0.9;
+      final double hairHeight = hairWidth * 0.95;
 
       if (hairImage != null) {
-        // Draw loaded PNG asset
-        final Rect dstRect = Rect.fromCenter(
-          center: Offset.zero,
-          width: hairWidth,
-          height: hairHeight,
-        );
+        final Rect dstRect = Rect.fromCenter(center: Offset.zero, width: hairWidth, height: hairHeight);
         final Rect srcRect = Rect.fromLTWH(0, 0, hairImage!.width.toDouble(), hairImage!.height.toDouble());
-        canvas.drawImageRect(hairImage!, srcRect, dstRect, Paint()..filterQuality = FilterQuality.high);
+        final Paint p = Paint()
+          ..filterQuality = FilterQuality.high
+          ..colorFilter = ColorFilter.mode(hairColor, BlendMode.modulate);
+        canvas.drawImageRect(hairImage!, srcRect, dstRect, p);
       } else {
-        // Vector fallback preview for hairstyle
-        _drawHairVector(canvas, hairWidth, hairHeight, hairStyle!.primaryColor);
+        _drawRealisticHair(canvas, hairWidth, hairHeight, hairStyle!.id, hairColor);
       }
 
       canvas.restore();
     }
 
-    // 2. Draw Beard Style Overlay
+    // 3. Draw Realistic Beard Style Overlay
     if (beardStyle != null && beardStyle!.id != 'b_clean_shave') {
       canvas.save();
 
-      // Beard Anchor Point: Lower face / Chin
       final double beardX = faceCenterX;
       final double beardY = faceCenterY + (beardStyle!.verticalOffset * faceHeight) + (userOffsetY * faceHeight * 0.5);
 
@@ -91,71 +93,229 @@ class TryOnOverlayPainter extends CustomPainter {
       final double beardHeight = beardWidth * 0.85;
 
       if (beardImage != null) {
-        // Draw loaded PNG asset
-        final Rect dstRect = Rect.fromCenter(
-          center: Offset.zero,
-          width: beardWidth,
-          height: beardHeight,
-        );
+        final Rect dstRect = Rect.fromCenter(center: Offset.zero, width: beardWidth, height: beardHeight);
         final Rect srcRect = Rect.fromLTWH(0, 0, beardImage!.width.toDouble(), beardImage!.height.toDouble());
-        canvas.drawImageRect(beardImage!, srcRect, dstRect, Paint()..filterQuality = FilterQuality.high);
+        final Paint p = Paint()
+          ..filterQuality = FilterQuality.high
+          ..colorFilter = ColorFilter.mode(hairColor, BlendMode.modulate);
+        canvas.drawImageRect(beardImage!, srcRect, dstRect, p);
       } else {
-        // Vector fallback preview for beard style
-        _drawBeardVector(canvas, beardWidth, beardHeight, beardStyle!.primaryColor, beardStyle!.id);
+        _drawRealisticBeard(canvas, beardWidth, beardHeight, beardStyle!.id, hairColor);
       }
 
       canvas.restore();
     }
   }
 
-  void _drawHairVector(Canvas canvas, double width, double height, Color color) {
-    final paint = Paint()
-      ..color = color
-      ..style = PaintingStyle.fill
-      ..isAntiAlias = true;
+  // Soft Skin Concealer Mask to erase existing hair/beard boundaries like Snapchat
+  void _drawSkinClearingMask(Canvas canvas, double cx, double cy, double w, double h, double angle) {
+    canvas.save();
+    canvas.translate(cx, cy);
+    canvas.rotate(angle);
 
-    final path = Path();
-    // Dome/cap shape for hairstyle
-    path.moveTo(-width * 0.5, height * 0.1);
-    path.cubicTo(
-      -width * 0.55, -height * 0.6,
-      width * 0.55, -height * 0.6,
-      width * 0.5, height * 0.1,
-    );
-    path.cubicTo(
-      width * 0.3, height * 0.3,
-      -width * 0.3, height * 0.3,
-      -width * 0.5, height * 0.1,
-    );
-    path.close();
+    // Natural skin blending gradient
+    final maskPaint = Paint()
+      ..shader = ui.Gradient.radial(
+        Offset(0, -h * 0.1),
+        w * 0.65,
+        [
+          const Color(0x33E5B899), // Subtle skin tone center
+          const Color(0x22D4A37E),
+          Colors.transparent,
+        ],
+      )
+      ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 12);
 
-    canvas.drawPath(path, paint);
-  }
+    canvas.drawOval(Rect.fromCenter(center: Offset(0, -h * 0.25), width: w * 1.1, height: h * 0.5), maskPaint);
 
-  void _drawBeardVector(Canvas canvas, double width, double height, Color color, String styleId) {
-    final paint = Paint()
-      ..color = color
-      ..style = styleId.contains('stubble') ? PaintingStyle.stroke : PaintingStyle.fill
-      ..strokeWidth = styleId.contains('stubble') ? 4.0 : 1.0
-      ..isAntiAlias = true;
+    if (beardStyle != null) {
+      final beardMaskPaint = Paint()
+        ..shader = ui.Gradient.radial(
+          Offset(0, h * 0.35),
+          w * 0.6,
+          [
+            const Color(0x44E5B899),
+            const Color(0x22D4A37E),
+            Colors.transparent,
+          ],
+        )
+        ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 14);
 
-    final path = Path();
-
-    if (styleId.contains('goatee') || styleId.contains('van_dyke')) {
-      // Goatee / Chin loop
-      path.addOval(Rect.fromCenter(center: Offset(0, height * 0.2), width: width * 0.4, height: height * 0.5));
-    } else if (styleId.contains('moustache')) {
-      // Mustache loop
-      path.addOval(Rect.fromCenter(center: Offset(0, -height * 0.15), width: width * 0.6, height: height * 0.25));
-    } else {
-      // Full beard jawline U-shape
-      path.moveTo(-width * 0.45, -height * 0.2);
-      path.quadraticBezierTo(0, height * 0.6, width * 0.45, -height * 0.2);
-      path.quadraticBezierTo(0, height * 0.2, -width * 0.45, -height * 0.2);
-      path.close();
+      canvas.drawOval(Rect.fromCenter(center: Offset(0, h * 0.35), width: w * 0.95, height: h * 0.45), beardMaskPaint);
     }
 
-    canvas.drawPath(path, paint);
+    canvas.restore();
+  }
+
+  // Realistic Multi-Tonal Hair Rendering with Gradient Volume & Hair Strands
+  void _drawRealisticHair(Canvas canvas, double w, double h, String styleId, Color baseColor) {
+    final Color highlightColor = Color.alphaBlend(Colors.white.withOpacity(0.25), baseColor);
+    final Color shadowColor = Color.alphaBlend(Colors.black.withOpacity(0.4), baseColor);
+
+    // Base Hair Volume Gradient
+    final Paint volumePaint = Paint()
+      ..shader = ui.Gradient.linear(
+        Offset(0, -h * 0.5),
+        Offset(0, h * 0.4),
+        [highlightColor, baseColor, shadowColor],
+      )
+      ..isAntiAlias = true;
+
+    final Path mainHairPath = Path();
+
+    if (styleId.contains('fade') || styleId.contains('crew') || styleId.contains('buzz')) {
+      // Crop / Fade Volumetric Shape
+      mainHairPath.moveTo(-w * 0.48, h * 0.15);
+      mainHairPath.cubicTo(
+        -w * 0.52, -h * 0.55,
+        w * 0.52, -h * 0.55,
+        w * 0.48, h * 0.15,
+      );
+      mainHairPath.cubicTo(
+        w * 0.35, h * 0.05,
+        -w * 0.35, h * 0.05,
+        -w * 0.48, h * 0.15,
+      );
+    } else if (styleId.contains('pompadour') || styleId.contains('quiff')) {
+      // High Swept Pompadour Volume
+      mainHairPath.moveTo(-w * 0.45, h * 0.1);
+      mainHairPath.cubicTo(
+        -w * 0.55, -h * 0.85,
+        w * 0.3, -h * 0.80,
+        w * 0.48, h * 0.1,
+      );
+      mainHairPath.cubicTo(
+        w * 0.25, h * 0.05,
+        -w * 0.25, h * 0.05,
+        -w * 0.45, h * 0.1,
+      );
+    } else {
+      // Standard Flowing Hair Volume
+      mainHairPath.moveTo(-w * 0.5, h * 0.2);
+      mainHairPath.cubicTo(
+        -w * 0.58, -h * 0.65,
+        w * 0.58, -h * 0.65,
+        w * 0.5, h * 0.2,
+      );
+      mainHairPath.cubicTo(
+        w * 0.3, h * 0.08,
+        -w * 0.3, h * 0.08,
+        -w * 0.5, h * 0.2,
+      );
+    }
+    mainHairPath.close();
+
+    // 1. Draw base volumetric hair mass
+    canvas.drawPath(mainHairPath, volumePaint);
+
+    // 2. Draw Realistic Individual Hair Strands & Texture Lines
+    final Paint strandPaint = Paint()
+      ..color = highlightColor.withOpacity(0.6)
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 1.8
+      ..isAntiAlias = true;
+
+    final rand = math.Random(styleId.hashCode);
+    for (int i = 0; i < 24; i++) {
+      final double startX = (rand.nextDouble() - 0.5) * w * 0.7;
+      final double startY = -h * 0.1 - (rand.nextDouble() * h * 0.35);
+      final double endX = startX + (rand.nextDouble() - 0.5) * 30;
+      final double endY = startY + 25 + rand.nextDouble() * 20;
+
+      final strandPath = Path();
+      strandPath.moveTo(startX, startY);
+      strandPath.quadraticBezierTo(
+        startX + (rand.nextDouble() - 0.5) * 15,
+        startY + (endY - startY) / 2,
+        endX,
+        endY,
+      );
+      canvas.drawPath(strandPath, strandPaint);
+    }
+
+    // 3. Natural Hairline Soft Skin Fade Edge
+    final Paint fadeEdgePaint = Paint()
+      ..shader = ui.Gradient.linear(
+        Offset(0, h * 0.02),
+        Offset(0, h * 0.18),
+        [
+          baseColor.withOpacity(0.9),
+          baseColor.withOpacity(0.0),
+        ],
+      );
+    canvas.drawRect(Rect.fromLTWH(-w * 0.45, h * 0.02, w * 0.9, h * 0.16), fadeEdgePaint);
+  }
+
+  // Realistic Beard Texture & Follicle Rendering
+  void _drawRealisticBeard(Canvas canvas, double w, double h, String styleId, Color baseColor) {
+    final Color highlightColor = Color.alphaBlend(Colors.white.withOpacity(0.2), baseColor);
+    final Color shadowColor = Color.alphaBlend(Colors.black.withOpacity(0.5), baseColor);
+
+    final Paint beardVolumePaint = Paint()
+      ..shader = ui.Gradient.linear(
+        Offset(0, -h * 0.2),
+        Offset(0, h * 0.5),
+        [baseColor.withOpacity(0.95), shadowColor],
+      )
+      ..isAntiAlias = true;
+
+    final Path beardPath = Path();
+
+    if (styleId.contains('goatee') || styleId.contains('van_dyke')) {
+      // Goatee / Chin Beard Curve
+      beardPath.addOval(Rect.fromCenter(center: Offset(0, h * 0.22), width: w * 0.42, height: h * 0.48));
+    } else if (styleId.contains('moustache')) {
+      // Mustache Wing Shape
+      beardPath.moveTo(-w * 0.32, -h * 0.08);
+      beardPath.quadraticBezierTo(0, -h * 0.25, w * 0.32, -h * 0.08);
+      beardPath.quadraticBezierTo(0, -h * 0.02, -w * 0.32, -h * 0.08);
+      beardPath.close();
+    } else {
+      // Full Beard / Stubble Jaw Outline
+      beardPath.moveTo(-w * 0.46, -h * 0.2);
+      beardPath.cubicTo(
+        -w * 0.48, h * 0.55,
+        w * 0.48, h * 0.55,
+        w * 0.46, -h * 0.2,
+      );
+      beardPath.cubicTo(
+        w * 0.25, h * 0.15,
+        -w * 0.25, h * 0.15,
+        -w * 0.46, -h * 0.2,
+      );
+      beardPath.close();
+    }
+
+    if (styleId.contains('stubble')) {
+      // Light / Heavy Stubble Follicles Effect
+      final Paint stubblePaint = Paint()
+        ..color = baseColor.withOpacity(styleId.contains('heavy') ? 0.75 : 0.45)
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = styleId.contains('heavy') ? 2.5 : 1.5;
+
+      canvas.drawPath(beardPath, stubblePaint);
+    } else {
+      // Volumetric Beard Fill
+      canvas.drawPath(beardPath, beardVolumePaint);
+
+      // Realistic Beard Hair Texture Lines
+      final Paint hairStrandPaint = Paint()
+        ..color = highlightColor.withOpacity(0.5)
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 1.6
+        ..isAntiAlias = true;
+
+      final rand = math.Random(styleId.hashCode);
+      for (int i = 0; i < 20; i++) {
+        final double bx = (rand.nextDouble() - 0.5) * w * 0.6;
+        final double by = (rand.nextDouble() * h * 0.4);
+        canvas.drawLine(
+          Offset(bx, by),
+          Offset(bx + (rand.nextDouble() - 0.5) * 8, by + 10 + rand.nextDouble() * 10),
+          hairStrandPaint,
+        );
+      }
+    }
   }
 
   @override
@@ -168,6 +328,7 @@ class TryOnOverlayPainter extends CustomPainter {
         oldDelegate.beardImage != beardImage ||
         oldDelegate.userScale != userScale ||
         oldDelegate.userOffsetY != userOffsetY ||
-        oldDelegate.userRotation != userRotation;
+        oldDelegate.userRotation != userRotation ||
+        oldDelegate.hairColor != hairColor;
   }
 }

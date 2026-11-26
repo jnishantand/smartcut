@@ -12,6 +12,8 @@ class TryOnControls extends StatefulWidget {
   final double offsetY;
   final ValueChanged<double> onScaleChanged;
   final ValueChanged<double> onOffsetYChanged;
+  final Color selectedColor;
+  final ValueChanged<Color>? onColorChanged;
 
   const TryOnControls({
     super.key,
@@ -24,6 +26,8 @@ class TryOnControls extends StatefulWidget {
     required this.offsetY,
     required this.onScaleChanged,
     required this.onOffsetYChanged,
+    this.selectedColor = const Color(0xFF2B1D19),
+    this.onColorChanged,
   });
 
   @override
@@ -33,6 +37,14 @@ class TryOnControls extends StatefulWidget {
 class _TryOnControlsState extends State<TryOnControls> {
   StyleCategory _activeCategory = StyleCategory.hair;
   bool _showAdjustments = false;
+
+  final List<Color> _availableColors = const [
+    Color(0xFF2B1D19), // Dark Brown
+    Color(0xFF141414), // Natural Black
+    Color(0xFFD4A853), // Golden Blonde
+    Color(0xFF7A2B1E), // Auburn Red
+    Color(0xFF8E8E93), // Salt & Pepper
+  ];
 
   @override
   Widget build(BuildContext context) {
@@ -84,6 +96,40 @@ class _TryOnControlsState extends State<TryOnControls> {
             ),
           ),
           const Divider(height: 16),
+
+          // Color Palette Picker
+          if (widget.onColorChanged != null)
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 4.0),
+              child: Row(
+                children: [
+                  const Text('Color: ', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: AppColors.textSecondary)),
+                  const SizedBox(width: 8),
+                  ..._availableColors.map((color) {
+                    final isSelected = widget.selectedColor == color;
+                    return GestureDetector(
+                      onTap: () => widget.onColorChanged!(color),
+                      child: Container(
+                        width: 26,
+                        height: 26,
+                        margin: const EdgeInsets.only(right: 8),
+                        decoration: BoxDecoration(
+                          color: color,
+                          shape: BoxShape.circle,
+                          border: Border.all(
+                            color: isSelected ? AppColors.primary : Colors.black12,
+                            width: isSelected ? 3 : 1,
+                          ),
+                        ),
+                        child: isSelected
+                            ? const Icon(Icons.check, size: 14, color: Colors.white)
+                            : null,
+                      ),
+                    );
+                  }),
+                ],
+              ),
+            ),
 
           // Manual Adjustment Sliders (if toggled)
           if (_showAdjustments) ...[
@@ -166,14 +212,14 @@ class _TryOnControlsState extends State<TryOnControls> {
                           decoration: BoxDecoration(
                             color: style.primaryColor == Colors.transparent
                                 ? AppColors.border
-                                : style.primaryColor.withOpacity(0.2),
+                                : widget.selectedColor.withOpacity(0.8),
                             shape: BoxShape.circle,
                           ),
                           child: Icon(
                             _activeCategory == StyleCategory.hair
                                 ? Icons.face_retouching_natural
                                 : Icons.face,
-                            color: isSelected ? AppColors.primary : AppColors.textSecondary,
+                            color: Colors.white,
                             size: 20,
                           ),
                         ),

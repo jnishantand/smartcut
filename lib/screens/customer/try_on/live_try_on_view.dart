@@ -30,6 +30,7 @@ class _LiveTryOnViewState extends State<LiveTryOnView> with WidgetsBindingObserv
 
   double _userScale = 1.0;
   double _userOffsetY = 0.0;
+  Color _selectedColor = const Color(0xFF2B1D19);
 
   @override
   void initState() {
@@ -178,6 +179,7 @@ class _LiveTryOnViewState extends State<LiveTryOnView> with WidgetsBindingObserv
                       userScale: _userScale,
                       userOffsetY: _userOffsetY,
                       isMirrored: true,
+                      hairColor: _selectedColor,
                     ),
                   ),
 
@@ -227,6 +229,8 @@ class _LiveTryOnViewState extends State<LiveTryOnView> with WidgetsBindingObserv
           offsetY: _userOffsetY,
           onScaleChanged: (val) => setState(() => _userScale = val),
           onOffsetYChanged: (val) => setState(() => _userOffsetY = val),
+          selectedColor: _selectedColor,
+          onColorChanged: (color) => setState(() => _selectedColor = color),
         ),
       ],
     );

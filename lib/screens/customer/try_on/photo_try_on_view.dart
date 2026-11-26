@@ -30,6 +30,7 @@ class _PhotoTryOnViewState extends State<PhotoTryOnView> {
 
   double _userScale = 1.0;
   double _userOffsetY = 0.0;
+  Color _selectedColor = const Color(0xFF2B1D19);
 
   @override
   void dispose() {
@@ -152,6 +153,7 @@ class _PhotoTryOnViewState extends State<PhotoTryOnView> {
                                   beardStyle: _selectedBeardStyle,
                                   userScale: _userScale,
                                   userOffsetY: _userOffsetY,
+                                  hairColor: _selectedColor,
                                 ),
                               );
                             },
@@ -197,6 +199,8 @@ class _PhotoTryOnViewState extends State<PhotoTryOnView> {
           offsetY: _userOffsetY,
           onScaleChanged: (val) => setState(() => _userScale = val),
           onOffsetYChanged: (val) => setState(() => _userOffsetY = val),
+          selectedColor: _selectedColor,
+          onColorChanged: (color) => setState(() => _selectedColor = color),
         ),
       ],
     );
