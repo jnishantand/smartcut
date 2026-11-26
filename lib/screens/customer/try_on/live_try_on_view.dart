@@ -25,8 +25,8 @@ class _LiveTryOnViewState extends State<LiveTryOnView> with WidgetsBindingObserv
   bool _isProcessingFrame = false;
   bool _isCameraInitialized = false;
 
-  TryOnStyle? _selectedHairStyle;
-  TryOnStyle? _selectedBeardStyle;
+  TryOnStyle? _selectedHairStyle = TryOnStyle.hairstyles.first; // Default: Classic Fade
+  TryOnStyle? _selectedBeardStyle = TryOnStyle.beardStyles[3]; // Default: Short Beard
 
   double _userScale = 1.0;
   double _userOffsetY = 0.0;

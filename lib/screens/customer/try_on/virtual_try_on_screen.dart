@@ -22,16 +22,16 @@ class VirtualTryOnScreen extends StatelessWidget {
             unselectedLabelColor: AppColors.textSecondary,
             indicatorColor: AppColors.primary,
             tabs: [
+              Tab(icon: Icon(Icons.videocam_outlined), text: 'Live Camera AR'),
               Tab(icon: Icon(Icons.photo_camera_outlined), text: 'Photo Try-On'),
-              Tab(icon: Icon(Icons.videocam_outlined), text: 'Live Camera'),
             ],
           ),
         ),
         body: const TabBarView(
           physics: NeverScrollableScrollPhysics(), // Prevent horizontal swipe conflicts with sliders
           children: [
-            PhotoTryOnView(),
             LiveTryOnView(),
+            PhotoTryOnView(),
           ],
         ),
       ),
