@@ -107,41 +107,42 @@ class TryOnOverlayPainter extends CustomPainter {
     }
   }
 
-  // Soft Skin Concealer Mask to erase existing hair/beard boundaries like Snapchat
+  // Opaque-to-feathered skin cap over forehead & jaw to completely conceal real hair/stubble like Snapchat
   void _drawSkinClearingMask(Canvas canvas, double cx, double cy, double w, double h, double angle) {
     canvas.save();
     canvas.translate(cx, cy);
     canvas.rotate(angle);
 
-    // Natural skin blending gradient
-    final maskPaint = Paint()
+    // Forehead Hairline Skin Mask (erases real hair along forehead hairline)
+    final foreheadSkinPaint = Paint()
       ..shader = ui.Gradient.radial(
-        Offset(0, -h * 0.1),
-        w * 0.65,
+        Offset(0, -h * 0.22),
+        w * 0.58,
         [
-          const Color(0x33E5B899), // Subtle skin tone center
-          const Color(0x22D4A37E),
+          const Color(0xFFECC2A4), // Realistic skin tone base
+          const Color(0xDDDFB395),
           Colors.transparent,
         ],
       )
-      ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 12);
+      ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 16);
 
-    canvas.drawOval(Rect.fromCenter(center: Offset(0, -h * 0.25), width: w * 1.1, height: h * 0.5), maskPaint);
+    canvas.drawOval(Rect.fromCenter(center: Offset(0, -h * 0.24), width: w * 1.05, height: h * 0.42), foreheadSkinPaint);
 
+    // Jawline & Chin Beard Mask (erases real facial hair & stubble)
     if (beardStyle != null) {
-      final beardMaskPaint = Paint()
+      final beardSkinPaint = Paint()
         ..shader = ui.Gradient.radial(
-          Offset(0, h * 0.35),
-          w * 0.6,
+          Offset(0, h * 0.32),
+          w * 0.55,
           [
-            const Color(0x44E5B899),
-            const Color(0x22D4A37E),
+            const Color(0xFFECC2A4),
+            const Color(0xDDDFB395),
             Colors.transparent,
           ],
         )
-        ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 14);
+        ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 18);
 
-      canvas.drawOval(Rect.fromCenter(center: Offset(0, h * 0.35), width: w * 0.95, height: h * 0.45), beardMaskPaint);
+      canvas.drawOval(Rect.fromCenter(center: Offset(0, h * 0.32), width: w * 0.90, height: h * 0.45), beardSkinPaint);
     }
 
     canvas.restore();
@@ -163,7 +164,22 @@ class TryOnOverlayPainter extends CustomPainter {
 
     final Path mainHairPath = Path();
 
-    if (styleId.contains('fade') || styleId.contains('crew') || styleId.contains('buzz')) {
+    if (styleId.contains('afro')) {
+      // High Volumetric Afro Circle
+      mainHairPath.addOval(Rect.fromCenter(center: Offset(0, -h * 0.25), width: w * 1.15, height: h * 1.1));
+    } else if (styleId.contains('mohawk')) {
+      // Edgy Crested Mohawk
+      mainHairPath.moveTo(-w * 0.2, h * 0.1);
+      mainHairPath.quadraticBezierTo(-w * 0.25, -h * 0.9, 0, -h * 0.95);
+      mainHairPath.quadraticBezierTo(w * 0.25, -h * 0.9, w * 0.2, h * 0.1);
+      mainHairPath.close();
+    } else if (styleId.contains('man_bun')) {
+      // Man Bun (Main cap + Top bun)
+      mainHairPath.moveTo(-w * 0.45, h * 0.1);
+      mainHairPath.cubicTo(-w * 0.5, -h * 0.5, w * 0.5, -h * 0.5, w * 0.45, h * 0.1);
+      mainHairPath.close();
+      mainHairPath.addOval(Rect.fromCenter(center: Offset(0, -h * 0.65), width: w * 0.35, height: h * 0.35));
+    } else if (styleId.contains('fade') || styleId.contains('crew') || styleId.contains('buzz')) {
       // Crop / Fade Volumetric Shape
       mainHairPath.moveTo(-w * 0.48, h * 0.15);
       mainHairPath.cubicTo(
@@ -261,9 +277,23 @@ class TryOnOverlayPainter extends CustomPainter {
 
     final Path beardPath = Path();
 
-    if (styleId.contains('goatee') || styleId.contains('van_dyke')) {
-      // Goatee / Chin Beard Curve
-      beardPath.addOval(Rect.fromCenter(center: Offset(0, h * 0.22), width: w * 0.42, height: h * 0.48));
+    if (styleId.contains('viking') || styleId.contains('bandholz')) {
+      // Dense Full Long Viking / Bandholz Beard
+      beardPath.moveTo(-w * 0.48, -h * 0.2);
+      beardPath.cubicTo(-w * 0.5, h * 0.85, w * 0.5, h * 0.85, w * 0.48, -h * 0.2);
+      beardPath.cubicTo(w * 0.25, h * 0.1, -w * 0.25, h * 0.1, -w * 0.48, -h * 0.2);
+      beardPath.close();
+    } else if (styleId.contains('handlebar')) {
+      // Curled Handlebar Moustache
+      beardPath.moveTo(-w * 0.38, -h * 0.15);
+      beardPath.quadraticBezierTo(0, -h * 0.3, w * 0.38, -h * 0.15);
+      beardPath.quadraticBezierTo(w * 0.45, -h * 0.35, w * 0.35, -h * 0.02);
+      beardPath.quadraticBezierTo(0, -h * 0.05, -w * 0.35, -h * 0.02);
+      beardPath.quadraticBezierTo(-w * 0.45, -h * 0.35, -w * 0.38, -h * 0.15);
+      beardPath.close();
+    } else if (styleId.contains('goatee') || styleId.contains('van_dyke') || styleId.contains('anchor')) {
+      // Goatee / Anchor Chin Beard Curve
+      beardPath.addOval(Rect.fromCenter(center: Offset(0, h * 0.24), width: w * 0.44, height: h * 0.52));
     } else if (styleId.contains('moustache')) {
       // Mustache Wing Shape
       beardPath.moveTo(-w * 0.32, -h * 0.08);
