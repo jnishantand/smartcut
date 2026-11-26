@@ -13,6 +13,7 @@ import '../../../widgets/booking_details_dialog.dart';
 import '../../notifications/notification_history_screen.dart';
 import '../booking/service_selection_screen.dart';
 import '../booking/staff_selection_screen.dart';
+import '../try_on/virtual_try_on_screen.dart';
 
 class CustomerHomeScreen extends StatelessWidget {
   const CustomerHomeScreen({super.key});
@@ -28,6 +29,8 @@ class CustomerHomeScreen extends StatelessWidget {
               _buildHeader(context),
               _buildSalonStatusCard(context),
               _buildBookButton(context),
+              _buildTryOnBanner(context),
+              const SizedBox(height: 24),
               _buildPopularServices(context),
               _buildUpcomingAppointment(context),
             ],
@@ -254,6 +257,61 @@ class CustomerHomeScreen extends StatelessWidget {
           minimumSize: const Size(double.infinity, 56),
         ),
         child: const Text('Book an Appointment'),
+      ),
+    );
+  }
+
+  Widget _buildTryOnBanner(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 24.0),
+      child: GestureDetector(
+        onTap: () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(builder: (_) => const VirtualTryOnScreen()),
+          );
+        },
+        child: Container(
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: AppColors.secondary,
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(color: AppColors.primary.withOpacity(0.2)),
+          ),
+          child: Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: AppColors.primary,
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: const Icon(Icons.face_retouching_natural, color: Colors.white, size: 28),
+              ),
+              const SizedBox(width: 16),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Virtual Hairstyle & Beard Try-On',
+                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                        color: AppColors.primary,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    const Text(
+                      'Preview haircuts & beards on your face in real-time!',
+                      style: TextStyle(color: AppColors.textSecondary, fontSize: 12),
+                    ),
+                  ],
+                ),
+              ),
+              const Icon(Icons.arrow_forward_ios, size: 16, color: AppColors.primary),
+            ],
+          ),
+        ),
       ),
     );
   }
