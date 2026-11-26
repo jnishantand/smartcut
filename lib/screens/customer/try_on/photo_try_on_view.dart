@@ -222,15 +222,16 @@ class _PhotoTryOnViewState extends State<PhotoTryOnView> {
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: 32),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
+            Wrap(
+              spacing: 12,
+              runSpacing: 12,
+              alignment: WrapAlignment.center,
               children: [
                 ElevatedButton.icon(
                   onPressed: () => _pickImage(ImageSource.camera),
                   icon: const Icon(Icons.camera_alt),
                   label: const Text('Take Selfie'),
                 ),
-                const SizedBox(width: 16),
                 OutlinedButton.icon(
                   onPressed: () => _pickImage(ImageSource.gallery),
                   style: OutlinedButton.styleFrom(foregroundColor: Colors.white),
