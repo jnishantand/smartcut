@@ -13,8 +13,10 @@ class FaceDetectorService {
         options: FaceDetectorOptions(
           performanceMode: mode,
           enableLandmarks: true,
-          enableContours: true,
+          enableContours: false, // Contours reduce basic face detection sensitivity on some iOS devices
           enableClassification: false,
+          enableTracking: true,
+          minFaceSize: 0.1,
         ),
       );
     }

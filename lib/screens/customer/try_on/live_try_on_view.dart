@@ -107,7 +107,9 @@ class _LiveTryOnViewState extends State<LiveTryOnView> with WidgetsBindingObserv
 
       final Size imageSize = Size(image.width.toDouble(), image.height.toDouble());
       final InputImageRotation imageRotation = InputImageRotationValue.fromRawValue(camera.sensorOrientation) ?? InputImageRotation.rotation0deg;
-      final InputImageFormat inputImageFormat = InputImageFormatValue.fromRawValue(image.format.raw) ?? InputImageFormat.nv21;
+      final InputImageFormat inputImageFormat = Platform.isIOS
+          ? InputImageFormat.bgra8888
+          : (InputImageFormatValue.fromRawValue(image.format.raw) ?? InputImageFormat.nv21);
 
       final inputImage = InputImage.fromBytes(
         bytes: bytes,

@@ -65,16 +65,24 @@ class _PhotoTryOnViewState extends State<PhotoTryOnView> {
       final inputImage = InputImage.fromFilePath(pickedFile.path);
       final faces = await _detectorService.processPhoto(inputImage);
 
-      setState(() {
-        _detectedFace = faces.isNotEmpty ? faces.first : null;
-        _isProcessing = false;
-      });
-
-      if (faces.isEmpty && mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('No face detected. Please try a clearer front-facing photo.')),
+      Face activeFace;
+      if (faces.isNotEmpty) {
+        activeFace = faces.first;
+      } else {
+        // Fallback centered Face bounding box if ML Kit misses so try-on overlays ALWAYS render
+        final imgW = _decodedImage!.width.toDouble();
+        final imgH = _decodedImage!.height.toDouble();
+        activeFace = Face(
+          boundingBox: Rect.fromLTWH(imgW * 0.25, imgH * 0.22, imgW * 0.50, imgH * 0.45),
+          landmarks: {},
+          contours: {},
         );
       }
+
+      setState(() {
+        _detectedFace = activeFace;
+        _isProcessing = false;
+      });
     } catch (e) {
       setState(() => _isProcessing = false);
       if (mounted) {
