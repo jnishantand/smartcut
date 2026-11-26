@@ -23,6 +23,15 @@ class TryOnStyle {
 
   static const List<TryOnStyle> hairstyles = [
     TryOnStyle(
+      id: 'h_clean_bald',
+      name: 'Clean Bald Head',
+      category: StyleCategory.hair,
+      assetPath: 'assets/styles/hair_bald.png',
+      verticalOffset: -0.40,
+      scaleFactor: 1.0,
+      primaryColor: Colors.transparent,
+    ),
+    TryOnStyle(
       id: 'h_crew_cut',
       name: 'Crew Cut',
       category: StyleCategory.hair,

@@ -107,28 +107,43 @@ class TryOnOverlayPainter extends CustomPainter {
     }
   }
 
-  // Opaque-to-feathered skin cap over forehead & jaw to completely conceal real hair/stubble like Snapchat
+  // Natural Scalp & Beard Eraser Mask to erase real head hair and stubble in live video
   void _drawSkinClearingMask(Canvas canvas, double cx, double cy, double w, double h, double angle) {
     canvas.save();
     canvas.translate(cx, cy);
     canvas.rotate(angle);
 
-    // Forehead Hairline Skin Mask (erases real hair along forehead hairline)
-    final foreheadSkinPaint = Paint()
+    // 1. Natural Scalp Skin Cap (Erases head hair completely from forehead to top of head)
+    final scalpPaint = Paint()
       ..shader = ui.Gradient.radial(
-        Offset(0, -h * 0.22),
-        w * 0.58,
+        Offset(0, -h * 0.35),
+        w * 0.65,
         [
-          const Color(0xFFECC2A4), // Realistic skin tone base
-          const Color(0xDDDFB395),
+          const Color(0xFFECC2A4), // Scalp skin tone
+          const Color(0xFFE5B899),
+          const Color(0xCCDFB395),
           Colors.transparent,
         ],
       )
-      ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 16);
+      ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 12);
 
-    canvas.drawOval(Rect.fromCenter(center: Offset(0, -h * 0.24), width: w * 1.05, height: h * 0.42), foreheadSkinPaint);
+    final scalpPath = Path();
+    scalpPath.moveTo(-w * 0.52, -h * 0.1);
+    scalpPath.cubicTo(
+      -w * 0.58, -h * 0.75,
+      w * 0.58, -h * 0.75,
+      w * 0.52, -h * 0.1,
+    );
+    scalpPath.cubicTo(
+      w * 0.35, -h * 0.18,
+      -w * 0.35, -h * 0.18,
+      -w * 0.52, -h * 0.1,
+    );
+    scalpPath.close();
 
-    // Jawline & Chin Beard Mask (erases real facial hair & stubble)
+    canvas.drawPath(scalpPath, scalpPaint);
+
+    // 2. Jawline & Chin Beard Mask (Erases real facial hair & stubble)
     if (beardStyle != null) {
       final beardSkinPaint = Paint()
         ..shader = ui.Gradient.radial(
@@ -140,7 +155,7 @@ class TryOnOverlayPainter extends CustomPainter {
             Colors.transparent,
           ],
         )
-        ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 18);
+        ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 14);
 
       canvas.drawOval(Rect.fromCenter(center: Offset(0, h * 0.32), width: w * 0.90, height: h * 0.45), beardSkinPaint);
     }
@@ -150,6 +165,7 @@ class TryOnOverlayPainter extends CustomPainter {
 
   // Realistic Multi-Tonal Hair Rendering with Gradient Volume & Hair Strands
   void _drawRealisticHair(Canvas canvas, double w, double h, String styleId, Color baseColor) {
+    if (styleId == 'h_clean_bald') return; // Clean bald head (real head hair erased)
     final Color highlightColor = Color.alphaBlend(Colors.white.withOpacity(0.25), baseColor);
     final Color shadowColor = Color.alphaBlend(Colors.black.withOpacity(0.4), baseColor);
 
