@@ -118,7 +118,7 @@ class NotificationService {
 
           for (var change in snapshot.docChanges) {
             if (change.type == DocumentChangeType.added) {
-              final data = change.doc.data() as Map<String, dynamic>?;
+              final data = change.doc.data();
               if (data != null) {
                 showLocalNotification(
                   title: data['title'] ?? 'SmartCut Announcement',

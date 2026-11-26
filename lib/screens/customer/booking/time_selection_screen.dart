@@ -92,8 +92,8 @@ class _TimeSelectionScreenState extends State<TimeSelectionScreen> {
 
                     // A slot is unavailable if fully booked (4 chairs) OR disabled by Admin
                     final Set<String> unavailableSlots = Set.from(adminDisabledSlots);
-                    slotBookingCounts.forEach((slot, count) {
-                      if (count >= 4) {
+                    slotBookingCounts.forEach((slot, bookedCount) {
+                      if (bookedCount >= 4) {
                         unavailableSlots.add(slot);
                       }
                     });

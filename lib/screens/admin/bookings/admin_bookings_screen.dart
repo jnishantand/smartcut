@@ -1,8 +1,6 @@
-import 'package:flutter/material.dart';
 import '../../../theme/app_colors.dart';
 import '../../../services/firestore_service.dart';
 import '../../../models/booking.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
 
 class AdminBookingsScreen extends StatelessWidget {
   const AdminBookingsScreen({super.key});

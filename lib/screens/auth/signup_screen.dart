@@ -4,7 +4,6 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:provider/provider.dart';
 import '../../theme/app_colors.dart';
 import '../../providers/user_provider.dart';
-import '../customer/customer_main_screen.dart';
 
 class SignUpScreen extends StatefulWidget {
   final String phoneNumber;
